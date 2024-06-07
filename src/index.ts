@@ -20,12 +20,13 @@ export const main = async (options: Options) => {
   writeSchema(generatedSchema, options)
 }
 
-const options: Options = {
-  ...defaultOptions,
-  path: "openapi.json", // file path or url
-  static: true,
-  baseDir: "resources",
-  specialPath: "special",
-  // includeCodes: [200, 201, 202, 204],
-}
-main(options)
+// sample code
+// const options: Options = {
+//   ...defaultOptions,
+//   path: "openapi.json", // file path or url
+//   static: true,
+//   baseDir: "resources",
+//   specialPath: "special",
+//   // includeCodes: [200, 201, 202, 204],
+// }
+// main(options)
