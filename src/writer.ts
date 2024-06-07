@@ -195,7 +195,7 @@ export const writeSchema = async (schemas: Record<string, SchemaOutputType>, opt
   // key is schema name, value is generated schema value
   const generatedVars = Object.entries(schemas)
     .map(([varName, varValue]) => {
-      return `export const ${varName} = ${toUnquotedJSON(varValue)}`
+      return `export const ${varName}Mock = ${toUnquotedJSON(varValue)}`
     })
     .join("\n\n")
   const outputFileName = path.join(`${options.baseDir}`, "schemas.ts")
