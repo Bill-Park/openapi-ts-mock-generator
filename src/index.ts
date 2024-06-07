@@ -1,7 +1,7 @@
 import { defaultOptions } from "./defaults"
-import { generate } from "./generate"
+import { generateAPI, generateSchema } from "./generate"
 import { Options } from "./types"
-import * as prettier from "prettier"
+import { writeApi, writeResponse, writeSchema } from "./writer"
 
 async function main() {
   const options: Options = {
@@ -18,6 +18,13 @@ async function main() {
   }
   writeApi(generatedAPI, options) // Todo: split by tags
   writeResponse(generatedAPI, options)
+
+  const generatedSchema = await generateSchema(options)
+  if (generatedSchema === undefined) {
+    console.warn("generate schema fail")
+    return
+  }
+  writeSchema(generatedSchema, options)
 }
 
 main()
