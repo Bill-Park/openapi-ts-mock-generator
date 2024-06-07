@@ -5,6 +5,7 @@ import { camelCase, pascalCase } from "change-case-all"
 import { existsSync, mkdirSync } from "fs"
 import { writeFile } from "fs/promises"
 import { isReference } from "oazapfts/generate"
+import * as path from "path"
 import * as prettier from "prettier"
 
 export const writeHandlers = async (paths: PathNormalizedType[], options: Options) => {
@@ -123,7 +124,8 @@ export const writeHandlers = async (paths: PathNormalizedType[], options: Option
 
 export const writeResponses = async (paths: PathNormalizedType[], options: Options) => {
   const parser = new SwaggerParser()
-  await parser.dereference(options.path)
+  const openapiPath = path.join(options.baseDir ?? "", options.path)
+  await parser.dereference(openapiPath)
   const refs = parser.$refs
 
   const firstTags = Array.from(new Set(paths.map((path) => path.tags[0])))
