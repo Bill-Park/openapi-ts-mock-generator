@@ -215,6 +215,9 @@ const toUnquotedJSON = (param: ParseSchemaType): string => {
       .map(([key, value]) => `${key}:${toUnquotedJSON(value)}`)
       .join(",\n")
     return [`{`, `${results}`, `}`].join("\n")
+  } else if (typeof param === "string" && param.endsWith(" as const")) {
+    // split " as const" from string
+    return `"${param.replace(/(\w+)(\ as\ const)?$/, "$1")}" as const`
   }
   return JSON.stringify(param)
 }

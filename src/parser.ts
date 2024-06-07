@@ -47,6 +47,7 @@ export const parseSchema = (
   } else if (schemaValue.enum !== undefined) {
     // enum value
     const enumValue = faker.helpers.arrayElement(schemaValue.enum)
+    if (typeof enumValue === "string") return enumValue + " as const"
     return enumValue
   } else if (schemaValue.allOf !== undefined) {
     // allOf value, sub model
