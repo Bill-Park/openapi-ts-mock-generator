@@ -44,7 +44,7 @@ cli
       arrayMinLength: userOptions.arrayMinLength,
       arrayMaxLength: userOptions.arrayMaxLength,
       static: userOptions.static,
-      specialPath: userOptions.special,
+      specialPath: userOptions.specialPath,
       handlerUrl: userOptions.handlerUrl,
       fakerLocale: userOptions.locales,
       includeCodes: userOptions.includeCodes
