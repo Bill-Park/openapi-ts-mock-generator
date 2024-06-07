@@ -11,6 +11,7 @@ import {
   MIN_STRING_LENGTH,
   MIN_WORD_LENGTH,
 } from "./defaults"
+import { titleSpecialKey } from "./specialFakers"
 import { ParseSchemaType, SchemaOutputType } from "./types"
 import SwaggerParser from "@apidevtools/swagger-parser"
 import { Faker, ko } from "@faker-js/faker"
@@ -94,6 +95,14 @@ const uuidToB64 = (uuid: string) => {
 }
 
 const valueGenerator = (schemaValue: OpenAPIV3_1.SchemaObject): ParseSchemaType => {
+  // if title or description in special keys
+  // return special faker data
+  if (schemaValue.title && titleSpecialKey[schemaValue.title]) {
+    return titleSpecialKey[schemaValue.title]
+  } else if (schemaValue.description && titleSpecialKey[schemaValue.description]) {
+    return titleSpecialKey[schemaValue.description]
+  }
+
   if (schemaValue.type === "string" && schemaValue.format === "date-time") {
     // date-time, 2017-07-21T17:32:28Z
     return faker.date
