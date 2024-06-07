@@ -23,7 +23,8 @@ cli
   .option("-M, --array-max-length <length>", "Maximum array length.", {
     default: "3",
   })
-  .option("-sp, --special-path <specialPath>", "Generate special faker functions.", {
+  
+  .option("--special-path <specialPath>", "Generate special faker functions.", {
     default: undefined,
   })
   .option("--handler-url <handlerUrl>", "URL for the generated handlers", {
