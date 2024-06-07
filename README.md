@@ -27,6 +27,41 @@ npx openapi-ts-mock-generator openapi.json
 - **-M, --array-max-length**: maximum length of array.
 - **-sp, --special-path**: special path for custom mock data.
 
+## Special Keys
+
+Special Keys are used for custom mock data.
+Applied based on title and description.
+Key is target title or description, value can be value type or faker type.
+
+### value type
+
+use value as mock data.
+
+```json
+{
+  "year": {
+    "value": "2024"
+  }
+}
+```
+
+### faker type
+
+generate faker data.
+
+```json
+{
+  "age": {
+    "module": "number",
+    "type": "int",
+    "options": {
+      "min": 0,
+      "max": 150
+    }
+  }
+}
+```
+
 ## Formatter
 
 When apply prettier format before writeFile, I got ERR_INVALID_ARG_VALUE error.
