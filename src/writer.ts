@@ -1,6 +1,11 @@
+import { getRandomLengthArray, parseSchema } from "./parser"
 import { Options, PathNormalizedType } from "./types"
-import { pascalCase, camelCase } from "change-case-all"
+import SwaggerParser from "@apidevtools/swagger-parser"
+import { camelCase, pascalCase } from "change-case-all"
+import { writeFile } from "fs/promises"
 import { isReference } from "oazapfts/generate"
+import { OpenAPIV3_1 } from "openapi-types"
+import * as prettier from "prettier"
 
 export const writeApi = async (paths: PathNormalizedType[], options: Options) => {
   const mockHandlers = paths
@@ -47,7 +52,11 @@ export const writeApi = async (paths: PathNormalizedType[], options: Options) =>
     .join("\n\n")
 
 export const writeResponse = async (paths: PathNormalizedType[], options: Options) => {
-  const r = paths
+  const parser = new SwaggerParser()
+  await parser.dereference(options.path)
+  const refs = parser.$refs
+
+  const mockResponse = paths
     .map((path) => {
       const pathResponses = path.responses.map((res) => {
         const codeBaseArray = [
@@ -55,27 +64,48 @@ export const writeResponse = async (paths: PathNormalizedType[], options: Option
         ]
         if (res.schema?.type === "ref") {
           const schemaName = camelCase(res.schema.value.$ref.replace("#/components/schemas/", ""))
-          codeBaseArray.push(`  return ${schemaName}()`)
+          const schemaValue = refs.get(res.schema.value.$ref) as OpenAPIV3_1.SchemaObject
+          const outputSchema = parseSchema(schemaValue)
+          codeBaseArray.push(`  // Schema is ${schemaName}`)
+          codeBaseArray.push(`  return ${JSON.stringify(outputSchema, null, 2)}`)
         } else if (res.schema?.type === "array") {
           if (isReference(res.schema.value)) {
             const schemaName = camelCase(res.schema.value.$ref.replace("#/components/schemas/", ""))
-            //Todo: 가져오는게 아닌 생성하는 로직 필요
-            codeBaseArray.push(`  return [${schemaName}()]`)
+            const schemaValue = refs.get(res.schema.value.$ref) as OpenAPIV3_1.SchemaObject
+            const outputSchema = getRandomLengthArray().map(() => parseSchema(schemaValue))
+            codeBaseArray.push(`  // Schema is ${schemaName} array`)
+            codeBaseArray.push(`  return [${JSON.stringify(outputSchema, null, 2)}]`)
+          } else {
+            const outputSchema = getRandomLengthArray().map(
+              () => res.schema && parseSchema(res.schema.value)
+            )
+            codeBaseArray.push(`  return [${JSON.stringify(outputSchema, null, 2)}]`)
           }
         } else if (res.schema?.type === "anyOf") {
           const firstSchema = res.schema.value.anyOf?.[0]
           if (isReference(firstSchema)) {
             const schemaName = camelCase(firstSchema.$ref.replace("#/components/schemas/", ""))
-            codeBaseArray.push(`  return ${schemaName}()`)
+            const schemaValue = refs.get(firstSchema.$ref) as OpenAPIV3_1.SchemaObject
+            const outputSchema = parseSchema(schemaValue)
+            codeBaseArray.push(`  // Schema is ${schemaName}`)
+            codeBaseArray.push(`  return ${JSON.stringify(outputSchema, null, 2)}`)
           } else {
             codeBaseArray.push(`  return ${res.schema.value}`)
           }
         } else {
           codeBaseArray.push(`  return ${res.schema?.value}`)
         }
+
         return [...codeBaseArray, `}`].join("\n")
       })
       return `// ${path.operationId}\n` + pathResponses.join("\n\n")
     })
     .join("\n\n")
+
+  const formattedContent = await prettier.format(mockResponse, {
+    parser: "typescript",
+  })
+  await writeFile(options.output, formattedContent)
+  console.log(`Generated ${options.output}`)
 }
+
