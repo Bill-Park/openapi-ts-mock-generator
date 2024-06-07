@@ -10,6 +10,7 @@ import {
 import SwaggerParser from "@apidevtools/swagger-parser"
 import { isReference } from "oazapfts/generate"
 import { OpenAPIV3_1 } from "openapi-types"
+import * as path from "path"
 
 const getOpenAPIDocsDeref = async (path: string) => {
   const doc = await SwaggerParser.dereference(path)
@@ -26,7 +27,8 @@ const getOpenAPIDocsBundle = async (path: string) => {
 }
 
 export const generateSchema = async (options: Options) => {
-  const doc = await getOpenAPIDocsDeref(options.path)
+  const openapiPath = path.join(options.baseDir ?? "", options.path)
+  const doc = await getOpenAPIDocsDeref(openapiPath)
   const sampleSchemas = doc?.components?.schemas
   if (sampleSchemas === undefined) {
     console.warn("No schemas found")
@@ -43,7 +45,8 @@ export const generateSchema = async (options: Options) => {
 }
 
 export const generateAPI = async (options: Options) => {
-  const doc = await getOpenAPIDocsBundle(options.path)
+  const openapiPath = path.join(options.baseDir ?? "", options.path)
+  const doc = await getOpenAPIDocsBundle(openapiPath)
 
   const samplePaths = doc?.paths
   if (samplePaths === undefined) {
