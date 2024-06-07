@@ -1,5 +1,5 @@
 import { getRandomLengthArray, parseSchema, refSchemaParser } from "./parser"
-import { Options, PathNormalizedType } from "./types"
+import { Options, PathNormalizedType, SchemaOutputType } from "./types"
 import SwaggerParser from "@apidevtools/swagger-parser"
 import { camelCase, pascalCase } from "change-case-all"
 import { existsSync, mkdirSync } from "fs"
@@ -146,4 +146,19 @@ export const writeResponse = async (paths: PathNormalizedType[], options: Option
     await writeFile(fileName, formattedContent)
     console.log(`Generated ${fileName}`)
   })
+}
+
+export const writeSchema = async (schemas: Record<string, SchemaOutputType>, options: Options) => {
+  // key is schema name, value is generated schema value
+  const generatedVars = Object.entries(schemas)
+    .map(([varName, varValue]) => {
+      return `export const ${varName} = ${JSON.stringify(varValue, null, 2)}`
+    })
+    .join("\n\n")
+  const formattedContent = await prettier.format(generatedVars, {
+    parser: "typescript",
+  })
+  const outputFileName = `${options.baseDir}/schemas.ts`
+  await writeFile(outputFileName, formattedContent)
+  console.log(`Generated schema ${outputFileName}`)
 }
