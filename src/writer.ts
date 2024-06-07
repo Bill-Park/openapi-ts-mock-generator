@@ -1,5 +1,5 @@
 import { getRandomLengthArray, parseSchema, refSchemaParser, specialFakerParser } from "./parser"
-import { Options, PathNormalizedType, SchemaOutputType } from "./types"
+import { Options, ParseSchemaType, PathNormalizedType, SchemaOutputType } from "./types"
 import SwaggerParser from "@apidevtools/swagger-parser"
 import { camelCase, pascalCase } from "change-case-all"
 import { existsSync, mkdirSync } from "fs"
@@ -143,18 +143,18 @@ export const writeResponses = async (paths: PathNormalizedType[], options: Optio
         const { name, value } = refSchemaParser(res.schema.value.$ref, refs)
         const outputSchema = parseSchema(value, specialFakers)
         codeBaseArray.push(`  // Schema is ${name}`)
-        codeBaseArray.push(`  return ${JSON.stringify(outputSchema, null, 2)}`)
+        codeBaseArray.push(`  return ${toUnquotedJSON(outputSchema)}`)
       } else if (res.schema?.type === "array") {
         if (isReference(res.schema.value)) {
           const { name, value } = refSchemaParser(res.schema.value.$ref, refs)
           const outputSchema = getRandomLengthArray().map(() => parseSchema(value, specialFakers))
           codeBaseArray.push(`  // Schema is ${name} array`)
-          codeBaseArray.push(`  return [${JSON.stringify(outputSchema, null, 2)}]`)
+          codeBaseArray.push(`  return [${toUnquotedJSON(outputSchema)}]`)
         } else {
           const outputSchema = getRandomLengthArray().map(
             () => res.schema && parseSchema(res.schema.value, specialFakers)
           )
-          codeBaseArray.push(`  return [${JSON.stringify(outputSchema, null, 2)}]`)
+          codeBaseArray.push(`  return [${toUnquotedJSON(outputSchema)}]`)
         }
       } else if (res.schema?.type === "anyOf") {
         const firstSchema = res.schema.value.anyOf?.[0]
@@ -162,7 +162,7 @@ export const writeResponses = async (paths: PathNormalizedType[], options: Optio
           const { name, value } = refSchemaParser(firstSchema.$ref, refs)
           const outputSchema = parseSchema(value, specialFakers)
           codeBaseArray.push(`  // Schema is ${name}`)
-          codeBaseArray.push(`  return ${JSON.stringify(outputSchema, null, 2)}`)
+          codeBaseArray.push(`  return ${toUnquotedJSON(outputSchema)}`)
         } else {
           codeBaseArray.push(`  return ${res.schema.value}`)
         }
@@ -193,11 +193,26 @@ export const writeSchema = async (schemas: Record<string, SchemaOutputType>, opt
   // key is schema name, value is generated schema value
   const generatedVars = Object.entries(schemas)
     .map(([varName, varValue]) => {
-      return `export const ${varName} = ${JSON.stringify(varValue, null, 2)}`
+      return `export const ${varName} = ${toUnquotedJSON(varValue)}`
     })
     .join("\n\n")
   const outputFileName = path.join(`${options.baseDir}`, "schemas.ts")
   // Todo: add prettier
   await writeFile(outputFileName, generatedVars)
   console.log(`Generated schema ${outputFileName}`)
+}
+
+const toUnquotedJSON = (param: ParseSchemaType): string => {
+  if (param === null) {
+    return "null"
+  } else if (Array.isArray(param)) {
+    const results = param.map((elem) => toUnquotedJSON(elem))
+    return "[\n" + results.join(",") + "\n]"
+  } else if (typeof param === "object") {
+    const results = Object.entries(param)
+      .map(([key, value]) => `${key}:${toUnquotedJSON(value)}`)
+      .join(",\n")
+    return [`{`, `${results}`, `}`].join("\n")
+  }
+  return JSON.stringify(param)
 }
