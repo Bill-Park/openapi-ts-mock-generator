@@ -2,6 +2,7 @@ import { getRandomLengthArray, parseSchema, refSchemaParser } from "./parser"
 import { Options, PathNormalizedType } from "./types"
 import SwaggerParser from "@apidevtools/swagger-parser"
 import { camelCase, pascalCase } from "change-case-all"
+import { existsSync, mkdirSync } from "fs"
 import { writeFile } from "fs/promises"
 import { isReference } from "oazapfts/generate"
 import { OpenAPIV3_1 } from "openapi-types"
@@ -56,53 +57,69 @@ export const writeResponse = async (paths: PathNormalizedType[], options: Option
   await parser.dereference(options.path)
   const refs = parser.$refs
 
-  const mockResponse = paths
-    .map((path) => {
-      const pathResponses = path.responses.map((res) => {
-        const codeBaseArray = [
-          `export const get${pascalCase(path.operationId)}${res.statusCode} = () => {`,
-        ]
-        if (res.schema?.type === "ref") {
+  const firstTags = Array.from(new Set(paths.map((path) => path.tags[0])))
+  // create records with tag as key
+  const codeBasePerTag = firstTags.reduce(
+    (acc, tag) => {
+      acc[tag] = []
+      return acc
+    },
+    {} as Record<string, string[]>
+  )
+
+  paths.forEach((path) => {
+    const pathResponses = path.responses.map((res) => {
+      const codeBaseArray = [
+        `export const get${pascalCase(path.operationId)}${res.statusCode} = () => {`,
+      ]
+      if (res.schema?.type === "ref") {
+        const { name, value } = refSchemaParser(res.schema.value.$ref, refs)
+        const outputSchema = parseSchema(value)
+        codeBaseArray.push(`  // Schema is ${name}`)
+        codeBaseArray.push(`  return ${JSON.stringify(outputSchema, null, 2)}`)
+      } else if (res.schema?.type === "array") {
+        if (isReference(res.schema.value)) {
           const { name, value } = refSchemaParser(res.schema.value.$ref, refs)
+          const outputSchema = getRandomLengthArray().map(() => parseSchema(value))
+          codeBaseArray.push(`  // Schema is ${name} array`)
+          codeBaseArray.push(`  return [${JSON.stringify(outputSchema, null, 2)}]`)
+        } else {
+          const outputSchema = getRandomLengthArray().map(
+            () => res.schema && parseSchema(res.schema.value)
+          )
+          codeBaseArray.push(`  return [${JSON.stringify(outputSchema, null, 2)}]`)
+        }
+      } else if (res.schema?.type === "anyOf") {
+        const firstSchema = res.schema.value.anyOf?.[0]
+        if (isReference(firstSchema)) {
+          const { name, value } = refSchemaParser(firstSchema.$ref, refs)
           const outputSchema = parseSchema(value)
           codeBaseArray.push(`  // Schema is ${name}`)
           codeBaseArray.push(`  return ${JSON.stringify(outputSchema, null, 2)}`)
-        } else if (res.schema?.type === "array") {
-          if (isReference(res.schema.value)) {
-            const { name, value } = refSchemaParser(res.schema.value.$ref, refs)
-            const outputSchema = getRandomLengthArray().map(() => parseSchema(value))
-            codeBaseArray.push(`  // Schema is ${name} array`)
-            codeBaseArray.push(`  return [${JSON.stringify(outputSchema, null, 2)}]`)
-          } else {
-            const outputSchema = getRandomLengthArray().map(
-              () => res.schema && parseSchema(res.schema.value)
-            )
-            codeBaseArray.push(`  return [${JSON.stringify(outputSchema, null, 2)}]`)
-          }
-        } else if (res.schema?.type === "anyOf") {
-          const firstSchema = res.schema.value.anyOf?.[0]
-          if (isReference(firstSchema)) {
-            const { name, value } = refSchemaParser(firstSchema.$ref, refs)
-            const outputSchema = parseSchema(value)
-            codeBaseArray.push(`  // Schema is ${name}`)
-            codeBaseArray.push(`  return ${JSON.stringify(outputSchema, null, 2)}`)
-          } else {
-            codeBaseArray.push(`  return ${res.schema.value}`)
-          }
         } else {
-          codeBaseArray.push(`  return ${res.schema?.value}`)
+          codeBaseArray.push(`  return ${res.schema.value}`)
         }
+      } else {
+        codeBaseArray.push(`  return ${res.schema?.value}`)
+      }
 
-        return [...codeBaseArray, `}`].join("\n")
-      })
-      return `// ${path.operationId}\n` + pathResponses.join("\n\n")
+      return [...codeBaseArray, `}`].join("\n")
     })
-    .join("\n\n")
-
-  const formattedContent = await prettier.format(mockResponse, {
-    parser: "typescript",
+    const pathResponsesWithComment = `// ${path.operationId}\n` + pathResponses.join("\n\n")
+    codeBasePerTag[path.tags[0]].push(pathResponsesWithComment)
   })
-  await writeFile(options.output, formattedContent)
-  console.log(`Generated ${options.output}`)
-}
 
+  const directory = `${options.baseDir}/response`
+  if (!existsSync(directory)) {
+    mkdirSync(directory, { recursive: true })
+  }
+
+  Object.entries(codeBasePerTag).forEach(async ([tag, responses]) => {
+    const formattedContent = await prettier.format(responses.join("\n\n"), {
+      parser: "typescript",
+    })
+    const fileName = `${directory}/${tag}.ts`
+    await writeFile(fileName, formattedContent)
+    console.log(`Generated ${fileName}`)
+  })
+}
