@@ -6,26 +6,17 @@ import * as prettier from "prettier"
 async function main() {
   const options: Options = {
     path: "resources/openapi.json", // file path or url
-    output: "resources/mockSchemas.ts",
     static: true,
+    baseDir: "resources",
+    // includeCodes: [200, 201, 202, 204],
   }
-  const generated = await generate(options)
-  if (generated === undefined) {
-    console.warn("generate fail")
+  const generatedAPI = await generateAPI(options)
+  if (generatedAPI === undefined) {
+    console.warn("generate api fail")
     return
   }
-  // record key to variable name, value to variable's value
-  const generatedVars = Object.entries(generated)
-    .map(([varName, varValue]) => {
-      return `export const ${varName} = ${JSON.stringify(varValue, null, 2)}`
-    })
-    .join("\n\n")
-
-  const formattedContent = await prettier.format(generatedVars, {
-    parser: "typescript",
-  })
-  await writeFile(options.output, formattedContent)
-  console.log(`Generated ${options.output}`)
+  writeApi(generatedAPI, options) // Todo: split by tags
+  writeResponse(generatedAPI, options)
 }
 
 main()
