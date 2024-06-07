@@ -11,13 +11,14 @@ import {
   MIN_STRING_LENGTH,
   MIN_WORD_LENGTH,
 } from "./defaults"
-import { titleSpecialKey } from "./specialFakers"
-import { ParseSchemaType, SchemaOutputType } from "./types"
+import { Options, ParseSchemaType, SchemaOutputType } from "./types"
 import SwaggerParser from "@apidevtools/swagger-parser"
 import { Faker, ko } from "@faker-js/faker"
 import { camelCase } from "change-case-all"
+import { existsSync, readFileSync } from "fs"
 import { isReference } from "oazapfts/generate"
 import { OpenAPIV3_1 } from "openapi-types"
+import { join } from "path"
 
 const faker = new Faker({
   locale: [ko],
@@ -26,6 +27,7 @@ faker.seed(FAKER_SEED)
 
 export const parseSchema = (
   schemaValue: OpenAPIV3_1.ReferenceObject | OpenAPIV3_1.SchemaObject,
+  specialSchema: ReturnType<typeof specialFakerParser>,
   outputSchema: ParseSchemaType = {}
 ): ParseSchemaType => {
   if (isReference(schemaValue)) {
@@ -37,7 +39,7 @@ export const parseSchema = (
     if (schemaValue.properties === undefined) return {}
     return Object.entries(schemaValue.properties).reduce(
       (acc, [key, field]) => {
-        acc[key] = parseSchema(field, outputSchema) as SchemaOutputType
+        acc[key] = parseSchema(field, specialSchema, outputSchema) as SchemaOutputType
         return acc
       },
       {} as Record<string, SchemaOutputType>
@@ -51,7 +53,7 @@ export const parseSchema = (
     const allOfValue = schemaValue.allOf
     return faker.helpers.arrayElement(
       allOfValue.map((field) => {
-        return parseSchema(field, outputSchema)
+        return parseSchema(field, specialSchema, outputSchema)
       })
     )
   } else if (schemaValue.anyOf !== undefined) {
@@ -59,7 +61,7 @@ export const parseSchema = (
     const anyOfValue = schemaValue.anyOf
     return faker.helpers.arrayElement(
       anyOfValue.map((field) => {
-        return parseSchema(field, outputSchema)
+        return parseSchema(field, specialSchema, outputSchema)
       })
     )
   } else if (schemaValue.oneOf !== undefined) {
@@ -67,21 +69,20 @@ export const parseSchema = (
     const oneOfValue = schemaValue.oneOf
     return faker.helpers.arrayElement(
       oneOfValue.map((field) => {
-        return parseSchema(field, outputSchema)
+        return parseSchema(field, specialSchema, outputSchema)
       })
     )
   } else if (schemaValue.type === "array") {
     // array
     const arrayValue = schemaValue.items
-    return getRandomLengthArray().map(() => parseSchema(arrayValue, outputSchema)) as (
-      | SchemaOutputType
-      | Record<string, SchemaOutputType>
-    )[]
+    return getRandomLengthArray().map(() =>
+      parseSchema(arrayValue, specialSchema, outputSchema)
+    ) as (SchemaOutputType | Record<string, SchemaOutputType>)[]
   } else if (schemaValue.type === "string" && schemaValue.pattern) {
     // regex pattern string
     return "pattern string"
   }
-  return valueGenerator(schemaValue)
+  return valueGenerator(schemaValue, specialSchema)
 }
 
 const uuidToB64 = (uuid: string) => {
@@ -94,13 +95,17 @@ const uuidToB64 = (uuid: string) => {
   return base64Uuid
 }
 
-const valueGenerator = (schemaValue: OpenAPIV3_1.SchemaObject): ParseSchemaType => {
+const valueGenerator = (
+  schemaValue: OpenAPIV3_1.SchemaObject,
+  specialSchema: ReturnType<typeof specialFakerParser>
+): ParseSchemaType => {
   // if title or description in special keys
   // return special faker data
-  if (schemaValue.title && titleSpecialKey[schemaValue.title]) {
-    return titleSpecialKey[schemaValue.title]
-  } else if (schemaValue.description && titleSpecialKey[schemaValue.description]) {
-    return titleSpecialKey[schemaValue.description]
+  const { titleSpecial, descriptionSpecial } = specialSchema
+  if (schemaValue.title && titleSpecial[schemaValue.title]) {
+    return titleSpecial[schemaValue.title]
+  } else if (schemaValue.description && descriptionSpecial[schemaValue.description]) {
+    return descriptionSpecial[schemaValue.description]
   }
 
   if (schemaValue.type === "string" && schemaValue.format === "date-time") {
@@ -200,4 +205,60 @@ export const refSchemaParser = (ref: string, refs: SwaggerParser.$Refs) => {
   const schemaName = camelCase(ref.replace("#/components/schemas/", ""))
   const schemaValue: OpenAPIV3_1.SchemaObject = refs.get(ref)
   return { name: schemaName, value: schemaValue }
+}
+
+const getFakerValue = (value: object): SchemaOutputType => {
+  if ("value" in value) {
+    // value type, use directly
+    return value.value as SchemaOutputType
+  } else if ("module" in value && "type" in value) {
+    // faker type, make faker
+    const fakerModule = faker[value.module as keyof typeof faker]
+    if (fakerModule === undefined) {
+      console.warn("can't find faker module", fakerModule)
+      return undefined
+    }
+    const fakerFunc = fakerModule[value.type as keyof typeof fakerModule] as Function
+    if (fakerFunc === undefined || typeof fakerFunc !== "function") {
+      console.warn("can't find faker function", fakerFunc)
+      return undefined
+    }
+    return "options" in value ? fakerFunc(value.options) : fakerFunc()
+  }
+}
+
+export const specialFakerParser = (options: Options) => {
+  if (options.specialPath === undefined)
+    return {
+      titleSpecial: {},
+      descriptionSpecial: {},
+    }
+  const titlePath = join(options.baseDir ?? "", options.specialPath, "titles.json")
+  const descPath = join(options.baseDir ?? "", options.specialPath, "descriptions.json")
+  const titleSpecialKey: Record<string, object> = existsSync(titlePath)
+    ? JSON.parse(readFileSync(titlePath, "utf-8"))
+    : {}
+  const descriptionSpecialKey: Record<string, object> = existsSync(descPath)
+    ? JSON.parse(readFileSync(descPath, "utf-8"))
+    : {}
+
+  const titleSpecial = Object.entries(titleSpecialKey).reduce(
+    (acc, [key, value]) => {
+      const fakerValue = getFakerValue(value)
+      acc[key] = fakerValue
+      return acc
+    },
+    {} as Record<string, SchemaOutputType>
+  )
+
+  const descriptionSpecial = Object.entries(descriptionSpecialKey).reduce(
+    (acc, [key, value]) => {
+      const fakerValue = getFakerValue(value)
+      acc[key] = fakerValue
+      return acc
+    },
+    {} as Record<string, SchemaOutputType>
+  )
+
+  return { titleSpecial, descriptionSpecial }
 }

@@ -1,4 +1,4 @@
-import { getRandomLengthArray, parseSchema, refSchemaParser } from "./parser"
+import { getRandomLengthArray, parseSchema, refSchemaParser, specialFakerParser } from "./parser"
 import { Options, PathNormalizedType, SchemaOutputType } from "./types"
 import SwaggerParser from "@apidevtools/swagger-parser"
 import { camelCase, pascalCase } from "change-case-all"
@@ -133,7 +133,7 @@ export const writeResponses = async (paths: PathNormalizedType[], options: Optio
     },
     {} as Record<string, string[]>
   )
-
+  const specialFakers = specialFakerParser(options)
   paths.forEach((path) => {
     const pathResponses = path.responses.map((res) => {
       const codeBaseArray = [
@@ -141,18 +141,18 @@ export const writeResponses = async (paths: PathNormalizedType[], options: Optio
       ]
       if (res.schema?.type === "ref") {
         const { name, value } = refSchemaParser(res.schema.value.$ref, refs)
-        const outputSchema = parseSchema(value)
+        const outputSchema = parseSchema(value, specialFakers)
         codeBaseArray.push(`  // Schema is ${name}`)
         codeBaseArray.push(`  return ${JSON.stringify(outputSchema, null, 2)}`)
       } else if (res.schema?.type === "array") {
         if (isReference(res.schema.value)) {
           const { name, value } = refSchemaParser(res.schema.value.$ref, refs)
-          const outputSchema = getRandomLengthArray().map(() => parseSchema(value))
+          const outputSchema = getRandomLengthArray().map(() => parseSchema(value, specialFakers))
           codeBaseArray.push(`  // Schema is ${name} array`)
           codeBaseArray.push(`  return [${JSON.stringify(outputSchema, null, 2)}]`)
         } else {
           const outputSchema = getRandomLengthArray().map(
-            () => res.schema && parseSchema(res.schema.value)
+            () => res.schema && parseSchema(res.schema.value, specialFakers)
           )
           codeBaseArray.push(`  return [${JSON.stringify(outputSchema, null, 2)}]`)
         }
@@ -160,7 +160,7 @@ export const writeResponses = async (paths: PathNormalizedType[], options: Optio
         const firstSchema = res.schema.value.anyOf?.[0]
         if (isReference(firstSchema)) {
           const { name, value } = refSchemaParser(firstSchema.$ref, refs)
-          const outputSchema = parseSchema(value)
+          const outputSchema = parseSchema(value, specialFakers)
           codeBaseArray.push(`  // Schema is ${name}`)
           codeBaseArray.push(`  return ${JSON.stringify(outputSchema, null, 2)}`)
         } else {

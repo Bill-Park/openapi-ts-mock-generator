@@ -7,6 +7,7 @@ export type Options = {
   static?: boolean
   includeCodes?: number[]
   baseDir?: string
+  specialPath?: string
 }
 
 export type SchemaOutputType = string | number | boolean | null | undefined | Date

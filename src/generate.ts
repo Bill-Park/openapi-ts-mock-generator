@@ -1,4 +1,4 @@
-import { parseSchema } from "./parser"
+import { parseSchema, specialFakerParser } from "./parser"
 import {
   HttpMethods,
   Options,
@@ -37,9 +37,10 @@ export const generateSchema = async (options: Options) => {
     return
   }
 
+  const specialFakers = specialFakerParser(options)
   return Object.entries(sampleSchemas).reduce(
     (acc, [schemaName, schema]) => {
-      acc[schemaName] = parseSchema(schema) as SchemaOutputType
+      acc[schemaName] = parseSchema(schema, specialFakers, {}) as SchemaOutputType
       return acc
     },
     {} as Record<string, SchemaOutputType>
@@ -58,6 +59,7 @@ export const generateAPI = async (options: Options) => {
     return
   }
 
+  const specialFakers = specialFakerParser(options)
   const normalizedPaths = Object.entries(samplePaths).reduce((acc, [apiName, api]) => {
     if (api === undefined) return acc
     const paths = Object.values(HttpMethods)
@@ -97,7 +99,7 @@ export const generateAPI = async (options: Options) => {
                 // empty object return undefined
                 return undefined
               }
-              return parseSchema(schema ?? {}, {})
+              return parseSchema(schema ?? {}, specialFakers, {})
             })()
 
             return {
