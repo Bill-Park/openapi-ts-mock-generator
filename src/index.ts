@@ -1,7 +1,7 @@
 import { defaultOptions } from "./defaults"
 import { generateAPI, generateSchema } from "./generate"
 import { Options } from "./types"
-import { writeApi, writeResponse, writeSchema } from "./writer"
+import { writeHandlers, writeResponses, writeSchema } from "./writer"
 
 async function main() {
   const options: Options = {
@@ -16,8 +16,8 @@ async function main() {
     console.warn("generate api fail")
     return
   }
-  writeApi(generatedAPI, options) // Todo: split by tags
-  writeResponse(generatedAPI, options)
+  writeHandlers(generatedAPI, options)
+  writeResponses(generatedAPI, options)
 
   const generatedSchema = await generateSchema(options)
   if (generatedSchema === undefined) {

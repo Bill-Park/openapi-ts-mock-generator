@@ -7,10 +7,10 @@ import { writeFile } from "fs/promises"
 import { isReference } from "oazapfts/generate"
 import * as prettier from "prettier"
 
-export const writeApi = async (paths: PathNormalizedType[], options: Options) => {
+export const writeHandlers = async (paths: PathNormalizedType[], options: Options) => {
   const firstTags = Array.from(new Set(paths.map((path) => path.tags[0])))
   // create records with tag as key
-  const apisPerTag = firstTags.reduce(
+  const handlersPerTag = firstTags.reduce(
     (acc, tag) => {
       acc[tag] = []
       return acc
@@ -55,14 +55,14 @@ export const writeApi = async (paths: PathNormalizedType[], options: Options) =>
       // empty responses
       codeBaseArray.push(`  return HttpResponse.json()`)
     }
-    const pathApi = [...codeBaseArray, `}),`].join("\n")
-    apisPerTag[path.tags[0]].push(pathApi)
+    const handler = [...codeBaseArray, `}),`].join("\n")
+    handlersPerTag[path.tags[0]].push(handler)
   })
 
-  Object.entries(apisPerTag).forEach(async ([tag, apis]) => {
+  Object.entries(handlersPerTag).forEach(async ([tag, handlers]) => {
     // Todo: need to import http and responses
     const handlerName = camelCase(tag)
-    const mockHandlers = `const ${handlerName}Handlers = [${apis.join("\n\n")}]`
+    const mockHandlers = `const ${handlerName}Handlers = [${handlers.join("\n\n")}]`
     const directory = `${options.baseDir}/handlers`
     if (!existsSync(directory)) {
       mkdirSync(directory)
@@ -72,11 +72,11 @@ export const writeApi = async (paths: PathNormalizedType[], options: Options) =>
       parser: "typescript",
     })
     await writeFile(fileName, formattedContent)
-    console.log(`Generated API ${fileName}`)
+    console.log(`Generated Handler ${fileName}`)
   })
 }
 
-export const writeResponse = async (paths: PathNormalizedType[], options: Options) => {
+export const writeResponses = async (paths: PathNormalizedType[], options: Options) => {
   const parser = new SwaggerParser()
   await parser.dereference(options.path)
   const refs = parser.$refs
