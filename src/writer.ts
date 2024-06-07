@@ -1,4 +1,4 @@
-import { getRandomLengthArray, parseSchema } from "./parser"
+import { getRandomLengthArray, parseSchema, refSchemaParser } from "./parser"
 import { Options, PathNormalizedType } from "./types"
 import SwaggerParser from "@apidevtools/swagger-parser"
 import { camelCase, pascalCase } from "change-case-all"
@@ -63,17 +63,15 @@ export const writeResponse = async (paths: PathNormalizedType[], options: Option
           `export const get${pascalCase(path.operationId)}${res.statusCode} = () => {`,
         ]
         if (res.schema?.type === "ref") {
-          const schemaName = camelCase(res.schema.value.$ref.replace("#/components/schemas/", ""))
-          const schemaValue = refs.get(res.schema.value.$ref) as OpenAPIV3_1.SchemaObject
-          const outputSchema = parseSchema(schemaValue)
-          codeBaseArray.push(`  // Schema is ${schemaName}`)
+          const { name, value } = refSchemaParser(res.schema.value.$ref, refs)
+          const outputSchema = parseSchema(value)
+          codeBaseArray.push(`  // Schema is ${name}`)
           codeBaseArray.push(`  return ${JSON.stringify(outputSchema, null, 2)}`)
         } else if (res.schema?.type === "array") {
           if (isReference(res.schema.value)) {
-            const schemaName = camelCase(res.schema.value.$ref.replace("#/components/schemas/", ""))
-            const schemaValue = refs.get(res.schema.value.$ref) as OpenAPIV3_1.SchemaObject
-            const outputSchema = getRandomLengthArray().map(() => parseSchema(schemaValue))
-            codeBaseArray.push(`  // Schema is ${schemaName} array`)
+            const { name, value } = refSchemaParser(res.schema.value.$ref, refs)
+            const outputSchema = getRandomLengthArray().map(() => parseSchema(value))
+            codeBaseArray.push(`  // Schema is ${name} array`)
             codeBaseArray.push(`  return [${JSON.stringify(outputSchema, null, 2)}]`)
           } else {
             const outputSchema = getRandomLengthArray().map(
@@ -84,10 +82,9 @@ export const writeResponse = async (paths: PathNormalizedType[], options: Option
         } else if (res.schema?.type === "anyOf") {
           const firstSchema = res.schema.value.anyOf?.[0]
           if (isReference(firstSchema)) {
-            const schemaName = camelCase(firstSchema.$ref.replace("#/components/schemas/", ""))
-            const schemaValue = refs.get(firstSchema.$ref) as OpenAPIV3_1.SchemaObject
-            const outputSchema = parseSchema(schemaValue)
-            codeBaseArray.push(`  // Schema is ${schemaName}`)
+            const { name, value } = refSchemaParser(firstSchema.$ref, refs)
+            const outputSchema = parseSchema(value)
+            codeBaseArray.push(`  // Schema is ${name}`)
             codeBaseArray.push(`  return ${JSON.stringify(outputSchema, null, 2)}`)
           } else {
             codeBaseArray.push(`  return ${res.schema.value}`)

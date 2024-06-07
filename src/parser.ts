@@ -184,3 +184,9 @@ export const getRandomLengthArray = (
   const length = Math.floor(Math.random() * (max - min + 1)) + min
   return Array.from({ length }, (_, i) => i)
 }
+
+export const refSchemaParser = (ref: string, refs: SwaggerParser.$Refs) => {
+  const schemaName = camelCase(ref.replace("#/components/schemas/", ""))
+  const schemaValue: OpenAPIV3_1.SchemaObject = refs.get(ref)
+  return { name: schemaName, value: schemaValue }
+}
