@@ -46,9 +46,7 @@
       "types": "./dist/index.d.ts"
     }
   },
-  "bin": {
-    "openapi-ts-mock-generator": "./dist/cli.js"
-  },
+  "bin": "./dist/cli.js",
   "dependencies": {
     "@apidevtools/swagger-parser": "^10.1.0",
     "@faker-js/faker": "^8.4.1",
