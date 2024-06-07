@@ -6,7 +6,7 @@ export type Options = {
   static?: boolean
 }
 
-export type SchemaOutputType = string | number | boolean | null | undefined
+export type SchemaOutputType = string | number | boolean | null | undefined | Date
 
 export type ParseSchemaType =
   | SchemaOutputType
