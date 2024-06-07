@@ -1,10 +1,11 @@
-import { writeFile } from "fs/promises"
+import { defaultOptions } from "./defaults"
 import { generate } from "./generate"
 import { Options } from "./types"
 import * as prettier from "prettier"
 
 async function main() {
   const options: Options = {
+    ...defaultOptions,
     path: "resources/openapi.json", // file path or url
     static: true,
     baseDir: "resources",
