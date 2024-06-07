@@ -44,7 +44,11 @@ export const parseSchema = (
     // enum value
     const enumValue = isStatic
       ? faker.helpers.arrayElement(schemaValue.enum)
-      : `faker.helpers.arrayElement(${toUnquotedJSON(schemaValue.enum, 0, isStatic, true)})`
+      : `faker.helpers.arrayElement(${toUnquotedJSON(schemaValue.enum, {
+          depth: 0,
+          isStatic,
+          singleLine: true,
+        })})`
     if (isStatic && typeof enumValue === "string") return enumValue + " as const"
     return enumValue
   } else if (schemaValue.allOf !== undefined) {

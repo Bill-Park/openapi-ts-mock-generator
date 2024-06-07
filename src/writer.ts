@@ -144,7 +144,9 @@ export const writeResponses = async (paths: PathNormalizedType[], options: Optio
         const { name, value } = refSchemaParser(res.schema.value.$ref, refs)
         const outputSchema = parseSchema(value, specialFakers, options.static)
         codeBaseArray.push(`  // Schema is ${name}`)
-        codeBaseArray.push(`  return ${toUnquotedJSON(outputSchema, 1, options.static)}`)
+        codeBaseArray.push(
+          `  return ${toUnquotedJSON(outputSchema, { depth: 1, isStatic: options.static })}`
+        )
       } else if (res.schema?.type === "array") {
         if (isReference(res.schema.value)) {
           const { name, value } = refSchemaParser(res.schema.value.$ref, refs)
@@ -152,12 +154,16 @@ export const writeResponses = async (paths: PathNormalizedType[], options: Optio
             parseSchema(value, specialFakers, options.static)
           )
           codeBaseArray.push(`  // Schema is ${name} array`)
-          codeBaseArray.push(`  return ${toUnquotedJSON(outputSchema, 1, options.static)}`)
+          codeBaseArray.push(
+            `  return ${toUnquotedJSON(outputSchema, { depth: 1, isStatic: options.static })}`
+          )
         } else {
           const outputSchema = getRandomLengthArray().map(
             () => res.schema && parseSchema(res.schema.value, specialFakers, options.static)
           )
-          codeBaseArray.push(`  return ${toUnquotedJSON(outputSchema, 1, options.static)}`)
+          codeBaseArray.push(
+            `  return ${toUnquotedJSON(outputSchema, { depth: 1, isStatic: options.static })}`
+          )
         }
       } else if (res.schema?.type === "anyOf") {
         const firstSchema = res.schema.value.anyOf?.[0]
@@ -165,7 +171,9 @@ export const writeResponses = async (paths: PathNormalizedType[], options: Optio
           const { name, value } = refSchemaParser(firstSchema.$ref, refs)
           const outputSchema = parseSchema(value, specialFakers, options.static)
           codeBaseArray.push(`  // Schema is ${name}`)
-          codeBaseArray.push(`  return ${toUnquotedJSON(outputSchema, 1, options.static)}`)
+          codeBaseArray.push(
+            `  return ${toUnquotedJSON(outputSchema, { depth: 1, isStatic: options.static })}`
+          )
         } else {
           codeBaseArray.push(`  return ${res.schema.value}`)
         }
@@ -197,7 +205,9 @@ export const writeSchema = (schemas: Record<string, SchemaOutputType>, options: 
   // key is schema name, value is generated schema value
   const generatedVars = Object.entries(schemas)
     .map(([varName, varValue]) => {
-      return `export const ${varName}Mock = ${toUnquotedJSON(varValue, 0, options.static)}`
+      return `export const ${varName}Mock = ${toUnquotedJSON(varValue, {
+        isStatic: options.static,
+      })}`
     })
     .join("\n\n")
 
@@ -228,22 +238,33 @@ export const writeFaker = (options: Options) => {
 
 export const toUnquotedJSON = (
   param: ParseSchemaType,
-  depth = 0,
-  isStatic = false,
-  singleLine = false
+  options: {
+    depth?: number
+    isStatic?: boolean
+    singleLine?: boolean
+  }
 ): string => {
+  const { depth, isStatic, singleLine } = {
+    depth: 0,
+    isStatic: false,
+    singleLine: false,
+    ...options,
+  }
+
   const prefixSpace = " ".repeat(depth * 2) // for indent
   const lineBreak = singleLine ? "" : "\n"
 
   if (param === null) {
     return "null"
   } else if (Array.isArray(param)) {
-    const results = param.map((elem) => toUnquotedJSON(elem, depth + 1, isStatic))
+    const results = param.map((elem) => toUnquotedJSON(elem, { ...options, depth: depth + 1 }))
     const firstElementSpace = singleLine ? "" : "  "
     return ["[", firstElementSpace + results.join(", "), "]"].join(lineBreak + prefixSpace)
   } else if (typeof param === "object") {
     const results = Object.entries(param)
-      .map(([key, value]) => `  ${key}: ${toUnquotedJSON(value, depth + 1, isStatic)},`)
+      .map(
+        ([key, value]) => `  ${key}: ${toUnquotedJSON(value, { ...options, depth: depth + 1 })},`
+      )
       .join(lineBreak + prefixSpace)
     return ["{", `${results}`, "}"].join(lineBreak + prefixSpace)
   } else if (
