@@ -150,17 +150,19 @@ export const writeResponses = async (paths: PathNormalizedType[], options: Optio
       } else if (res.schema?.type === "array") {
         if (isReference(res.schema.value)) {
           const { name, value } = refSchemaParser(res.schema.value.$ref, refs)
-          const outputSchema = getRandomLengthArray().map(() =>
-            parseSchema(value, specialFakers, options.static)
-          )
+          const outputSchema = getRandomLengthArray(
+            options.arrayMinLength,
+            options.arrayMaxLength,
+          ).map(() => parseSchema(value, specialFakers, options.static))
           codeBaseArray.push(`  // Schema is ${name} array`)
           codeBaseArray.push(
             `  return ${toUnquotedJSON(outputSchema, { depth: 1, isStatic: options.static })}`
           )
         } else {
-          const outputSchema = getRandomLengthArray().map(
-            () => res.schema && parseSchema(res.schema.value, specialFakers, options.static)
-          )
+          const outputSchema = getRandomLengthArray(
+            options.arrayMinLength,
+            options.arrayMaxLength,
+          ).map(() => res.schema && parseSchema(res.schema.value, specialFakers, options.static))
           codeBaseArray.push(
             `  return ${toUnquotedJSON(outputSchema, { depth: 1, isStatic: options.static })}`
           )
