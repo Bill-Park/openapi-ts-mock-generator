@@ -156,8 +156,13 @@ const valueGenerator = (
           .replace(/=/g, "")
         `)
   } else if (schemaValue.type === "string") {
-    const minLength = schemaValue.minLength ?? MIN_STRING_LENGTH
-    const maxLength = schemaValue.maxLength ?? MAX_STRING_LENGTH
+    const minLength =
+      schemaValue.minLength ??
+      Math.min(MIN_STRING_LENGTH, schemaValue.maxLength ?? MAX_STRING_LENGTH)
+    const maxLength =
+      schemaValue.maxLength ??
+      Math.max(MAX_STRING_LENGTH, schemaValue.minLength ?? MIN_STRING_LENGTH)
+
     return isStatic
       ? faker.string.alphanumeric({
           length: { min: minLength, max: maxLength },
@@ -174,8 +179,8 @@ const valueGenerator = (
           faker.number.int({ min: ${MIN_INTEGER}, max: ${MAX_INTEGER} })
         `)
   } else if (schemaValue.type === "number") {
-    const minNumber = schemaValue.minimum ?? MIN_NUMBER
-    const maxNumber = schemaValue.maximum ?? MAX_NUMBER
+    const minNumber = schemaValue.minimum ?? Math.min(MIN_NUMBER, schemaValue.maximum ?? MAX_NUMBER)
+    const maxNumber = schemaValue.maximum ?? Math.max(MAX_NUMBER, schemaValue.minimum ?? MIN_NUMBER)
     return isStatic
       ? faker.number.float({
           min: minNumber,
