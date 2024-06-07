@@ -1,0 +1,13 @@
+{
+  "year": {
+    "value": "2024"
+  },
+  "age": {
+    "module": "number",
+    "type": "int",
+    "options": {
+      "min": 0,
+      "max": 150
+    }
+  }
+}
