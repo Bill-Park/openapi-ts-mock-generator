@@ -155,110 +155,37 @@ const valueGenerator = (
           .replace(/\\//g, "_")
           .replace(/=/g, "")
         `)
-  } else if (schemaValue.type === "string" && schemaValue.minLength && schemaValue.maxLength) {
-    // string has max length
-    return isStatic
-      ? faker.string.alphanumeric({
-          length: { min: schemaValue.minLength, max: schemaValue.maxLength },
-        })
-      : multiLineStr(`
-          faker.string.alphanumeric({
-            length: { min: ${schemaValue.minLength}, max: ${schemaValue.maxLength} },
-          })
-        `)
-  } else if (schemaValue.type === "string" && schemaValue.maxLength) {
-    // string has max length
-    const minStringLength = Math.min(MIN_STRING_LENGTH, schemaValue.maxLength)
-    return isStatic
-      ? faker.string.alphanumeric({
-          length: { min: minStringLength, max: schemaValue.maxLength },
-        })
-      : multiLineStr(`
-          faker.string.alphanumeric({
-            length: { min: ${minStringLength}, max: ${schemaValue.maxLength} },
-          })
-        `)
-  } else if (schemaValue.type === "string" && schemaValue.minLength) {
-    // string has min length
-    const maxStringLength = Math.max(MAX_STRING_LENGTH, schemaValue.minLength)
-    return isStatic
-      ? faker.string.alphanumeric({
-          length: { min: schemaValue.minLength, max: maxStringLength },
-        })
-      : multiLineStr(`
-          faker.string.alphanumeric({
-            length: { min: ${schemaValue.minLength}, max: ${maxStringLength} },
-          })
-        `)
   } else if (schemaValue.type === "string") {
+    const minLength = schemaValue.minLength ?? MIN_STRING_LENGTH
+    const maxLength = schemaValue.maxLength ?? MAX_STRING_LENGTH
     return isStatic
       ? faker.string.alphanumeric({
-          length: { min: MIN_STRING_LENGTH, max: MAX_STRING_LENGTH },
+          length: { min: minLength, max: maxLength },
         })
       : multiLineStr(`
-      faker.string.alphanumeric({
-        length: { min: ${MIN_STRING_LENGTH}, max: ${MAX_STRING_LENGTH} },
-      })
-    `)
+          faker.string.alphanumeric({
+            length: { min: ${minLength}, max: ${maxLength} },
+          })
+        `)
   } else if (schemaValue.type === "integer") {
     return isStatic
       ? faker.number.int({ min: MIN_INTEGER, max: MAX_INTEGER })
       : multiLineStr(`
           faker.number.int({ min: ${MIN_INTEGER}, max: ${MAX_INTEGER} })
         `)
-  } else if (schemaValue.type === "number" && schemaValue.maximum && schemaValue.minimum) {
-    return isStatic
-      ? faker.number.float({
-          min: schemaValue.minimum,
-          max: schemaValue.maximum,
-          fractionDigits: 2,
-        })
-      : multiLineStr(`
-          faker.number.float({
-            min: ${schemaValue.minimum},
-            max: ${schemaValue.maximum},
-            fractionDigits: 2,
-          })
-        `)
-  } else if (schemaValue.type === "number" && schemaValue.maximum) {
-    return isStatic
-      ? faker.number.float({
-          min: MIN_NUMBER,
-          max: schemaValue.maximum,
-          fractionDigits: 2,
-        })
-      : multiLineStr(`
-          faker.number.float({
-            min: ${MIN_NUMBER},
-            max: ${schemaValue.maximum},
-            fractionDigits: 2,
-          })
-        `)
-  } else if (schemaValue.type === "number" && schemaValue.minimum) {
-    return isStatic
-      ? faker.number.float({
-          min: schemaValue.minimum,
-          max: MAX_NUMBER,
-          fractionDigits: 2,
-        })
-      : multiLineStr(`
-          faker.number.float({
-            min: ${schemaValue.minimum},
-            max: ${MAX_NUMBER},
-            fractionDigits: 2,
-          })
-        `)
   } else if (schemaValue.type === "number") {
+    const minNumber = schemaValue.minimum ?? MIN_NUMBER
+    const maxNumber = schemaValue.maximum ?? MAX_NUMBER
     return isStatic
       ? faker.number.float({
-          min: MIN_NUMBER,
-          max: MAX_NUMBER,
+          min: minNumber,
+          max: maxNumber,
           fractionDigits: 2,
         })
       : multiLineStr(`
           faker.number.float({
-            min: ${MIN_NUMBER},
-            max: ${MAX_NUMBER},
+            min: ${minNumber},
+            max: ${maxNumber},
             fractionDigits: 2,
           })
         `)
