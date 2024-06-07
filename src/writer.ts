@@ -19,47 +19,48 @@ export const writeHandlers = async (paths: PathNormalizedType[], options: Option
   )
 
   paths.forEach((path) => {
-    const codeBaseArray = [`http.${path.method}(\`\${handlerUrl}${path.pathname}\`, () => {`]
+    const codeBaseArray = [`  http.${path.method}(\`\${handlerUrl}${path.pathname}\`, () => {`]
     if (path.responses.length === 1) {
       // single response
       const res = path.responses[0]
       if (res.schema?.type === "ref") {
         const schemaName = pascalCase(res.schema.value.$ref.replace("#/components/schemas/", ""))
-        codeBaseArray.push(`  // Schema is ${schemaName}`)
+        codeBaseArray.push(`    // Schema is ${schemaName}`)
       }
       const outputResName = `get${pascalCase(path.operationId)}${res.statusCode}`
-      codeBaseArray.push(`  return HttpResponse.json(${outputResName}(), {`)
-      codeBaseArray.push(`    status: ${res.statusCode},`)
-      codeBaseArray.push(`  })`)
+      codeBaseArray.push(`    return HttpResponse.json(${outputResName}(), {`)
+      codeBaseArray.push(`      status: ${res.statusCode},`)
+      codeBaseArray.push(`    })`)
     } else if (path.responses.length > 1) {
       // multiple responses
       // random select response
-      codeBaseArray.push(`  const responses = [`)
+      codeBaseArray.push(`    const responses = [`)
       path.responses.forEach((res) => {
         const schemaName =
           res.schema?.type === "ref"
             ? pascalCase(res.schema.value.$ref.replace("#/components/schemas/", ""))
             : ""
-        const schemaComment = schemaName ? `  // Schema is ${schemaName}` : ""
+        const schemaComment = schemaName ? ` // Schema is ${schemaName}` : ""
         const outputResName = `get${pascalCase(path.operationId)}${res.statusCode}`
         codeBaseArray.push(
-          `    [${outputResName}(), { status: ${res.statusCode} }],${schemaComment}`
+          `      [${outputResName}(), { status: ${res.statusCode} }],${schemaComment}`
         )
         return outputResName
       })
-      codeBaseArray.push(`  ]`)
-      codeBaseArray.push(`  const randomIndex = Math.floor(Math.random() * responses.length)`)
-      codeBaseArray.push(`  return HttpResponse.json(...responses[randomIndex])`)
+      codeBaseArray.push(`    ]`)
+      codeBaseArray.push(`    const randomIndex = Math.floor(Math.random() * responses.length)`)
+      codeBaseArray.push(`    return HttpResponse.json(...responses[randomIndex])`)
     } else {
       // empty responses
-      codeBaseArray.push(`  return HttpResponse.json()`)
+      codeBaseArray.push(`    return HttpResponse.json()`)
     }
-    const handler = [...codeBaseArray, `}),`].join("\n")
+    codeBaseArray.push(`  }),`)
+    const handler = codeBaseArray.join("\n")
     handlersPerTag[path.tags[0]].push(handler)
   })
 
   Object.entries(handlersPerTag).forEach(async ([tag, handlers]) => {
-    const importMSW = `import { http, HttpResponse } from 'msw'\n`
+    const importMSW = `import { http, HttpResponse } from 'msw'`
     const responseNames = handlers
       .reduce((acc, handler) => {
         const matched = handler.match(/get[A-Z]\w+/g)
@@ -67,18 +68,19 @@ export const writeHandlers = async (paths: PathNormalizedType[], options: Option
         return [...acc, ...matched]
       }, [] as string[])
       .join(", ")
-    const importResponses = `import { ${responseNames} } from "../response/${tag}"\n`
+    const importResponses =
+      responseNames.length > 0 ? `import { ${responseNames} } from "../response/${tag}"\n` : ""
+
     const handlerUrl = `const handlerUrl = "${options.handlerUrl}"`
 
     const handlerName = camelCase(tag)
     const mockHandlers = [
       `${importMSW}`,
       `${importResponses}`,
-      ``,
       `${handlerUrl}`,
       ``,
       `export const ${handlerName}Handlers = [`,
-      `  ${handlers.join("\n\n")}`,
+      `${handlers.join("\n\n")}`,
       `]`,
     ].join("\n")
     const directory = path.join(options.baseDir ?? "", "handlers")
@@ -101,7 +103,7 @@ export const writeHandlers = async (paths: PathNormalizedType[], options: Option
   const handlersArrayItem = Object.keys(handlersPerTag)
     .map((tag) => {
       const handlerName = `${camelCase(tag)}Handlers`
-      return `...${handlerName},`
+      return `  ...${handlerName},`
     })
     .join("\n")
 
@@ -109,7 +111,7 @@ export const writeHandlers = async (paths: PathNormalizedType[], options: Option
     `${handlersImport}`,
     ``,
     `export const handlers = [`,
-    `  ${handlersArrayItem}`,
+    `${handlersArrayItem}`,
     `]`,
   ].join("\n")
   const fileName = path.join(options.baseDir ?? "", "mockHandlers.ts")
