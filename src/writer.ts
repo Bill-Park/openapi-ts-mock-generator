@@ -69,11 +69,14 @@ export const writeHandlers = async (paths: PathNormalizedType[], options: Option
       }, [] as string[])
       .join(", ")
     const importResponses = `import { ${responseNames} } from "../response/${tag}"\n`
+    const baseURL = 'const baseURL = "*"'
 
     const handlerName = camelCase(tag)
     const mockHandlers = [
       `${importMSW}`,
       `${importResponses}`,
+      ``,
+      `${baseURL}`,
       ``,
       `export const ${handlerName}Handlers = [`,
       `  ${handlers.join("\n\n")}`,
