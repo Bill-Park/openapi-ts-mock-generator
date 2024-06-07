@@ -32,6 +32,9 @@ cli
   .option("--handler-url", "URL for the generated handlers", {
     default: "*",
   })
+  .option("-l, --locales <locales>", "Comma separated list of locales for faker.", {
+    default: "ko",
+  })
   .example("openapi-ts-mock-generator ./openapi.json")
   .example("openapi-ts-mock-generator http://127.0.0.1/openapi.json")
   .action(async (path, userOptions) => {
@@ -43,6 +46,7 @@ cli
       static: userOptions.static,
       specialPath: userOptions.special,
       handlerUrl: userOptions.handlerUrl,
+      fakerLocale: userOptions.locales,
       includeCodes: userOptions.includeCodes
         ? userOptions.includeCodes.split(",").map((code: string) => parseInt(code))
         : undefined,

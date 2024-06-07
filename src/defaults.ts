@@ -8,6 +8,7 @@ export const defaultOptions: Options = {
   arrayMaxLength: 3,
   static: true,
   handlerUrl: "*",
+  fakerLocale: "ko",
 }
 
 export const ARRAY_MIN_LENGTH = 1

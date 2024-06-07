@@ -9,6 +9,7 @@ export type Options = {
   baseDir?: string
   specialPath?: string
   handlerUrl: string
+  fakerLocale: string
 }
 
 export type SchemaOutputType = string | number | boolean | null | undefined | Date

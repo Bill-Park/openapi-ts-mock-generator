@@ -208,11 +208,11 @@ export const writeFaker = (options: Options) => {
   if (!existsSync(directory)) {
     mkdirSync(directory, { recursive: true })
   }
-
-  const fakerImport = `import { Faker, ${options.fakerLocale} } from "@faker-js/faker"\n\n`
+  const localeOption = options.fakerLocale.replace(",", ", ")
+  const fakerImport = `import { Faker, ${localeOption} } from "@faker-js/faker"\n\n`
   const fakerDeclare = [
     "export const faker = new Faker({",
-    `  locale: [${options.fakerLocale}]`,
+    `  locale: [${localeOption}]`,
     "})",
   ].join("\n")
 

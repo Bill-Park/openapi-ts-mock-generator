@@ -26,6 +26,7 @@ npx openapi-ts-mock-generator openapi.json
 - **-m, --array-min-length**: minimum length of array.
 - **-M, --array-max-length**: maximum length of array.
 - **-sp, --special-path**: special path for custom mock data.
+- **-l, --locales**: locales for faker data. look at [faker.js Localization](https://fakerjs.dev/guide/localization.html#available-locales) use Locale value. ex) ko
 
 ## Special Keys
 
@@ -60,14 +61,4 @@ generate faker data.
     }
   }
 }
-```
-
-## Prettier
-
-Output code is not formatted.
-You can use prettier to format code.
-
-```bash
-npx prettier --write .
-npm run fmt
 ```
