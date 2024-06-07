@@ -42,15 +42,14 @@ export const writeHandlers = async (paths: PathNormalizedType[], options: Option
             : ""
         const schemaComment = schemaName ? `  // Schema is ${schemaName}` : ""
         const outputResName = `get${pascalCase(path.operationId)}${res.statusCode}`
-        codeBaseArray.push(`    [${outputResName}(), ${res.statusCode}],${schemaComment}`)
+        codeBaseArray.push(
+          `    [${outputResName}(), { status: ${res.statusCode} }],${schemaComment}`
+        )
         return outputResName
       })
       codeBaseArray.push(`  ]`)
       codeBaseArray.push(`  const randomIndex = Math.floor(Math.random() * responses.length)`)
-      codeBaseArray.push(`  const response = responses[randomIndex]`)
-      codeBaseArray.push(`  return HttpResponse.json(response[0], {`)
-      codeBaseArray.push(`    status: response[1],`)
-      codeBaseArray.push(`  })`)
+      codeBaseArray.push(`  return HttpResponse.json(...responses[randomIndex])`)
     } else {
       // empty responses
       codeBaseArray.push(`  return HttpResponse.json()`)
