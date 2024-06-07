@@ -12,7 +12,10 @@ cli
   })
   .option(
     "-c, --include-codes <codes>",
-    "Comma separated list of status codes to generate responses for."
+    "Comma separated list of status codes to generate responses for.",
+    {
+      default: "",
+    }
   )
   .option("-m, --array-min-length <length>", "Minimum array length.", {
     default: "1",
@@ -23,6 +26,9 @@ cli
   .option("-s, --static", "Generate static mocks.", {
     default: false,
   })
+  .option("-sp, --special-path", "Generate special faker functions.", {
+    default: undefined,
+  })
   .example("openapi-ts-mock-generator ./openapi.json")
   .example("openapi-ts-mock-generator http://127.0.0.1/openapi.json")
   .action(async (path, userOptions) => {
@@ -32,6 +38,7 @@ cli
       arrayMinLength: userOptions.arrayMinLength,
       arrayMaxLength: userOptions.arrayMaxLength,
       static: userOptions.static,
+      specialPath: userOptions.special,
       includeCodes: userOptions.includeCodes
         ? userOptions.includeCodes.split(",").map((code: string) => parseInt(code))
         : undefined,
