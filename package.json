@@ -22,6 +22,7 @@
   },
   "homepage": "https://github.com/Bill-Park/openapi-mock-generator#readme",
   "devDependencies": {
+    "@trivago/prettier-plugin-sort-imports": "^4.3.0",
     "prettier": "^3.2.5",
     "ts-node": "^10.9.2",
     "tsup": "^8.0.2",

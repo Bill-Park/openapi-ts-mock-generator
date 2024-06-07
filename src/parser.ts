@@ -1,10 +1,7 @@
-import { Faker, ko } from "@faker-js/faker"
-import { isReference } from "oazapfts/generate"
-import { OpenAPIV3_1 } from "openapi-types"
-import { ParseSchemaType, SchemaOutputType } from "./types"
 import {
-  ARRAY_MIN_LENGTH,
   ARRAY_MAX_LENGTH,
+  ARRAY_MIN_LENGTH,
+  FAKER_SEED,
   MAX_INTEGER,
   MAX_NUMBER,
   MAX_STRING_LENGTH,
@@ -13,8 +10,13 @@ import {
   MIN_NUMBER,
   MIN_STRING_LENGTH,
   MIN_WORD_LENGTH,
-  FAKER_SEED,
 } from "./defaults"
+import { ParseSchemaType, SchemaOutputType } from "./types"
+import SwaggerParser from "@apidevtools/swagger-parser"
+import { Faker, ko } from "@faker-js/faker"
+import { camelCase } from "change-case-all"
+import { isReference } from "oazapfts/generate"
+import { OpenAPIV3_1 } from "openapi-types"
 
 const faker = new Faker({
   locale: [ko],
