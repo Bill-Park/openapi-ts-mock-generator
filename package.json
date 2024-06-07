@@ -1,0 +1,42 @@
+{
+  "name": "openapi-mock-generator",
+  "version": "0.0.1",
+  "description": "mock data generator based openapi",
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Bill-Park/openapi-mock-generator.git"
+  },
+  "keywords": [
+    "typescript",
+    "openapi",
+    "mock"
+  ],
+  "author": "Bill Park",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Bill-Park/openapi-mock-generator/issues"
+  },
+  "homepage": "https://github.com/Bill-Park/openapi-mock-generator#readme",
+  "devDependencies": {
+    "prettier": "^3.2.5",
+    "ts-node": "^10.9.2",
+    "tsup": "^8.0.2",
+    "typescript": "^5.4.3",
+    "vitest": "^1.4.0"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "@apidevtools/swagger-parser": "^10.1.0",
+    "@faker-js/faker": "^8.4.1",
+    "oazapfts": "^6.0.4"
+  }
+}
