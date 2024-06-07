@@ -15,9 +15,9 @@ export const main = async (options: Options) => {
     console.warn("generate schema fail")
     return
   }
-  writeSchema(generatedSchema, options)
   writeHandlers(generatedAPI, options)
   writeResponses(generatedAPI, options)
+  writeSchema(generatedSchema, options)
 }
 
 const options: Options = {
