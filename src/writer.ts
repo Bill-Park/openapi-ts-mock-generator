@@ -147,7 +147,7 @@ export const writeResponses = async (paths: PathNormalizedType[], options: Optio
         const { name, value } = refSchemaParser(res.schema.value.$ref, refs)
         const outputSchema = parseSchema(value, specialFakers, options.static)
         codeBaseArray.push(`  // Schema is ${name}`)
-        codeBaseArray.push(`  return ${toUnquotedJSON(outputSchema)}`)
+        codeBaseArray.push(`  return ${toUnquotedJSON(outputSchema, 1)}`)
       } else if (res.schema?.type === "array") {
         if (isReference(res.schema.value)) {
           const { name, value } = refSchemaParser(res.schema.value.$ref, refs)
@@ -155,12 +155,12 @@ export const writeResponses = async (paths: PathNormalizedType[], options: Optio
             parseSchema(value, specialFakers, options.static)
           )
           codeBaseArray.push(`  // Schema is ${name} array`)
-          codeBaseArray.push(`  return ${toUnquotedJSON(outputSchema)}`)
+          codeBaseArray.push(`  return ${toUnquotedJSON(outputSchema, 1)}`)
         } else {
           const outputSchema = getRandomLengthArray().map(
             () => res.schema && parseSchema(res.schema.value, specialFakers, options.static)
           )
-          codeBaseArray.push(`  return ${toUnquotedJSON(outputSchema)}`)
+          codeBaseArray.push(`  return ${toUnquotedJSON(outputSchema, 1)}`)
         }
       } else if (res.schema?.type === "anyOf") {
         const firstSchema = res.schema.value.anyOf?.[0]
@@ -168,7 +168,7 @@ export const writeResponses = async (paths: PathNormalizedType[], options: Optio
           const { name, value } = refSchemaParser(firstSchema.$ref, refs)
           const outputSchema = parseSchema(value, specialFakers, options.static)
           codeBaseArray.push(`  // Schema is ${name}`)
-          codeBaseArray.push(`  return ${toUnquotedJSON(outputSchema)}`)
+          codeBaseArray.push(`  return ${toUnquotedJSON(outputSchema, 1)}`)
         } else {
           codeBaseArray.push(`  return ${res.schema.value}`)
         }
@@ -208,17 +208,18 @@ export const writeSchema = async (schemas: Record<string, SchemaOutputType>, opt
   console.log(`Generated schema ${outputFileName}`)
 }
 
-const toUnquotedJSON = (param: ParseSchemaType): string => {
+const toUnquotedJSON = (param: ParseSchemaType, depth = 0): string => {
+  const prefixSpace = " ".repeat(depth * 2) // for indent
   if (param === null) {
     return "null"
   } else if (Array.isArray(param)) {
-    const results = param.map((elem) => toUnquotedJSON(elem))
-    return "[\n" + results.join(",") + "\n]"
+    const results = param.map((elem) => toUnquotedJSON(elem, depth + 1))
+    return ["[", "  " + results.join(", "), "]"].join(`\n` + prefixSpace)
   } else if (typeof param === "object") {
     const results = Object.entries(param)
-      .map(([key, value]) => `${key}:${toUnquotedJSON(value)}`)
-      .join(",\n")
-    return [`{`, `${results}`, `}`].join("\n")
+      .map(([key, value]) => `  ${key}: ${toUnquotedJSON(value, depth + 1)},`)
+      .join("\n" + prefixSpace)
+    return ["{", `${results}`, "}"].join(`\n` + prefixSpace)
   } else if (typeof param === "string" && param.endsWith(" as const")) {
     // split " as const" from string
     return `"${param.replace(/(\w+)(\ as\ const)?$/, "$1")}" as const`
