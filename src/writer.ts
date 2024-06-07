@@ -117,7 +117,9 @@ export const writeHandlers = async (paths: PathNormalizedType[], options: Option
 
 export const writeResponses = async (paths: PathNormalizedType[], options: Options) => {
   const parser = new SwaggerParser()
-  const openapiPath = path.join(options.baseDir ?? "", options.path)
+  const openapiPath = options.path.startsWith("http")
+    ? options.path
+    : path.join(options.baseDir ?? "", options.path)
   await parser.dereference(openapiPath)
   const refs = parser.$refs
 

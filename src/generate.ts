@@ -27,7 +27,9 @@ const getOpenAPIDocsBundle = async (path: string) => {
 }
 
 export const generateSchema = async (options: Options) => {
-  const openapiPath = path.join(options.baseDir ?? "", options.path)
+  const openapiPath = options.path.startsWith("http")
+    ? options.path
+    : path.join(options.baseDir ?? "", options.path)
   const doc = await getOpenAPIDocsDeref(openapiPath)
   const sampleSchemas = doc?.components?.schemas
   if (sampleSchemas === undefined) {
@@ -45,7 +47,9 @@ export const generateSchema = async (options: Options) => {
 }
 
 export const generateAPI = async (options: Options) => {
-  const openapiPath = path.join(options.baseDir ?? "", options.path)
+  const openapiPath = options.path.startsWith("http")
+    ? options.path
+    : path.join(options.baseDir ?? "", options.path)
   const doc = await getOpenAPIDocsBundle(openapiPath)
 
   const samplePaths = doc?.paths
