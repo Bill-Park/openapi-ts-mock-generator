@@ -194,7 +194,10 @@ export const getRandomLengthArray = (
   min: number = ARRAY_MIN_LENGTH,
   max: number = ARRAY_MAX_LENGTH
 ) => {
-  const length = Math.floor(Math.random() * (max - min + 1)) + min
+  const length = faker.number.int({
+    min,
+    max,
+  })
   return Array.from({ length }, (_, i) => i)
 }
 
