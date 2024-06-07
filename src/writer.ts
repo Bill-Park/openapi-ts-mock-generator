@@ -24,7 +24,7 @@ export const writeHandlers = async (paths: PathNormalizedType[], options: Option
       // single response
       const res = path.responses[0]
       if (res.schema?.type === "ref") {
-        const schemaName = camelCase(res.schema.value.$ref.replace("#/components/schemas/", ""))
+        const schemaName = pascalCase(res.schema.value.$ref.replace("#/components/schemas/", ""))
         codeBaseArray.push(`  // Schema is ${schemaName}`)
       }
       const outputResName = `get${pascalCase(path.operationId)}${res.statusCode}`
@@ -38,7 +38,7 @@ export const writeHandlers = async (paths: PathNormalizedType[], options: Option
       path.responses.forEach((res) => {
         const schemaName =
           res.schema?.type === "ref"
-            ? camelCase(res.schema.value.$ref.replace("#/components/schemas/", ""))
+            ? pascalCase(res.schema.value.$ref.replace("#/components/schemas/", ""))
             : ""
         const schemaComment = schemaName ? `  // Schema is ${schemaName}` : ""
         const outputResName = `get${pascalCase(path.operationId)}${res.statusCode}`

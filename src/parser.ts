@@ -14,7 +14,7 @@ import {
 import { Options, ParseSchemaType, SchemaOutputType } from "./types"
 import SwaggerParser from "@apidevtools/swagger-parser"
 import { Faker, ko } from "@faker-js/faker"
-import { camelCase } from "change-case-all"
+import { pascalCase } from "change-case-all"
 import { existsSync, readFileSync } from "fs"
 import { isReference } from "oazapfts/generate"
 import { OpenAPIV3_1 } from "openapi-types"
@@ -202,7 +202,7 @@ export const getRandomLengthArray = (
 }
 
 export const refSchemaParser = (ref: string, refs: SwaggerParser.$Refs) => {
-  const schemaName = camelCase(ref.replace("#/components/schemas/", ""))
+  const schemaName = pascalCase(ref.replace("#/components/schemas/", ""))
   const schemaValue: OpenAPIV3_1.SchemaObject = refs.get(ref)
   return { name: schemaName, value: schemaValue }
 }
