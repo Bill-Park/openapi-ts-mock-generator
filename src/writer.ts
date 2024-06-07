@@ -69,7 +69,7 @@ export const writeHandlers = (paths: PathNormalizedType[], options: Options) => 
       }, [] as string[])
       .join(", ")
     const importResponses =
-      responseNames.length > 0 ? `import { ${responseNames} } from "../response/${tag}"\n` : ""
+      responseNames.length > 0 ? `import { ${responseNames} } from "../response"\n` : ""
 
     const handlerUrl = `const handlerUrl = "${options.handlerUrl}"`
 
