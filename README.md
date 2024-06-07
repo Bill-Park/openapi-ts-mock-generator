@@ -25,6 +25,7 @@ npx openapi-ts-mock-generator openapi.json
 - **-c, --include-codes**: include status codes in response.
 - **-m, --array-min-length**: minimum length of array.
 - **-M, --array-max-length**: maximum length of array.
+- **-sp, --special-path**: special path for custom mock data.
 
 ## Formatter
 
