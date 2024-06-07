@@ -25,9 +25,10 @@ npx openapi-ts-mock-generator openapi.json
 - **-c, --include-codes**: include status codes in response.
 - **-m, --array-min-length**: minimum length of array.
 - **-M, --array-max-length**: maximum length of array.
-- **-sp, --special-path**: special path for custom mock data.
+- **--special-path**: special path for custom mock data.
 - **-l, --locales**: locales for faker data. look at [faker.js Localization](https://fakerjs.dev/guide/localization.html#available-locales) use Locale value. ex) ko
-- **-s, --static** : generate static mock data.
+- **-s, --static**: generate static mock data.
+- **--handler-url**: handler url for msw.
 
 ## Special Keys
 
