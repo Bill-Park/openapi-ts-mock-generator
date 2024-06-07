@@ -1,16 +1,32 @@
-import { Options, SchemaOutputType } from "./types"
-import SwaggerParser from "@apidevtools/swagger-parser"
-import { OpenAPIV3_1 } from "openapi-types"
-import { defaultOptions } from "./defaults"
 import { parseSchema } from "./parser"
+import {
+  HttpMethods,
+  Options,
+  PathNormalizedType,
+  ResponseSchemaType,
+  SchemaOutputType,
+  isNotNullish,
+} from "./types"
+import SwaggerParser from "@apidevtools/swagger-parser"
+import { isReference } from "oazapfts/generate"
+import { OpenAPIV3_1 } from "openapi-types"
 
-export const generate = async (options: Options = defaultOptions) => {
-  if (!options.path) {
-    console.warn("No path provided")
-    return
-  }
-  const doc = await getOpenAPIDocs(options.path)
+const getOpenAPIDocsDeref = async (path: string) => {
+  const doc = await SwaggerParser.dereference(path)
+  const isOpenApiV3 = "openapi" in doc && doc.openapi.startsWith("3")
+  if (isOpenApiV3) return doc as OpenAPIV3_1.Document
+  return
+}
 
+const getOpenAPIDocsBundle = async (path: string) => {
+  const doc = await SwaggerParser.bundle(path)
+  const isOpenApiV3 = "openapi" in doc && doc.openapi.startsWith("3")
+  if (isOpenApiV3) return doc as OpenAPIV3_1.Document
+  return
+}
+
+export const generateSchema = async (options: Options) => {
+  const doc = await getOpenAPIDocsDeref(options.path)
   const sampleSchemas = doc?.components?.schemas
   if (sampleSchemas === undefined) {
     console.warn("No schemas found")
@@ -19,17 +35,85 @@ export const generate = async (options: Options = defaultOptions) => {
 
   return Object.entries(sampleSchemas).reduce(
     (acc, [schemaName, schema]) => {
-      const rootSchema = {} as Record<string, SchemaOutputType>
-      acc[schemaName] = parseSchema(schema, rootSchema) as SchemaOutputType
+      acc[schemaName] = parseSchema(schema) as SchemaOutputType
       return acc
     },
     {} as Record<string, SchemaOutputType>
   )
 }
 
-const getOpenAPIDocs = async (path: string) => {
-  const doc = await SwaggerParser.dereference(path)
-  const isOpenApiV3 = "openapi" in doc && doc.openapi.startsWith("3")
-  if (isOpenApiV3) return doc as OpenAPIV3_1.Document
-  return
+export const generateAPI = async (options: Options) => {
+  const doc = await getOpenAPIDocsBundle(options.path)
+
+  const samplePaths = doc?.paths
+  if (samplePaths === undefined) {
+    console.warn("No paths found")
+    return
+  }
+
+  const normalizedPaths = Object.entries(samplePaths).reduce((acc, [apiName, api]) => {
+    if (api === undefined) return acc
+    const paths = Object.values(HttpMethods)
+      .map((method) => {
+        if (api[method] === undefined) return
+        const responses = Object.entries(api[method]?.responses ?? [])
+          .map(([statusCode, response]) => {
+            if (isReference(response)) return undefined
+            if (options.includeCodes && !options.includeCodes.includes(parseInt(statusCode)))
+              return undefined
+            const schema = response.content?.["application/json"]?.schema ?? {}
+            const compositeSchema = (() => {
+              if ("oneOf" in schema) {
+                return {
+                  type: "oneOf",
+                  value: schema,
+                } as ResponseSchemaType
+              }
+              if ("anyOf" in schema) {
+                return {
+                  type: "anyOf",
+                  value: schema,
+                } as ResponseSchemaType
+              }
+              if ("type" in schema && "items" in schema && schema.type === "array") {
+                return {
+                  type: "array",
+                  value: schema.items,
+                } as ResponseSchemaType
+              }
+              // Todo: can't find sample data
+              // if ("allOf" in schema) {
+              //   return parseSchema(schema, {})
+              // }
+              if (isReference(schema)) return { type: "ref", value: schema } as ResponseSchemaType
+              if (Object.keys(schema).length === 0) {
+                // empty object return undefined
+                return undefined
+              }
+              return parseSchema(schema ?? {}, {})
+            })()
+
+            return {
+              statusCode: parseInt(statusCode),
+              description: response.description,
+              schema: compositeSchema,
+            }
+          })
+          .filter(isNotNullish)
+
+        return {
+          pathname: apiName,
+          operationId: api[method]?.operationId ?? "",
+          summary: api[method]?.summary ?? "",
+          tags: api[method]?.tags ?? ["default"],
+          method,
+          responses,
+        } as PathNormalizedType
+      })
+      .filter(isNotNullish)
+
+    return [...acc, ...paths]
+  }, [] as PathNormalizedType[])
+
+  return normalizedPaths
 }
