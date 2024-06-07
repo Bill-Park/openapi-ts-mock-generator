@@ -6,6 +6,7 @@ export const defaultOptions: Options = {
   arrayMinLength: 1,
   arrayMaxLength: 3,
   static: true,
+  handlerUrl: "*",
 }
 
 export const ARRAY_MIN_LENGTH = 1

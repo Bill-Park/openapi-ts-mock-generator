@@ -29,6 +29,9 @@ cli
   .option("-sp, --special-path", "Generate special faker functions.", {
     default: undefined,
   })
+  .option("--handler-url", "URL for the generated handlers", {
+    default: "*",
+  })
   .example("openapi-ts-mock-generator ./openapi.json")
   .example("openapi-ts-mock-generator http://127.0.0.1/openapi.json")
   .action(async (path, userOptions) => {
@@ -39,6 +42,7 @@ cli
       arrayMaxLength: userOptions.arrayMaxLength,
       static: userOptions.static,
       specialPath: userOptions.special,
+      handlerUrl: userOptions.handlerUrl,
       includeCodes: userOptions.includeCodes
         ? userOptions.includeCodes.split(",").map((code: string) => parseInt(code))
         : undefined,

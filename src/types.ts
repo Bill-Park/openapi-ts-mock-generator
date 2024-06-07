@@ -8,6 +8,7 @@ export type Options = {
   includeCodes?: number[]
   baseDir?: string
   specialPath?: string
+  handlerUrl: string
 }
 
 export type SchemaOutputType = string | number | boolean | null | undefined | Date

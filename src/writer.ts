@@ -19,7 +19,7 @@ export const writeHandlers = async (paths: PathNormalizedType[], options: Option
   )
 
   paths.forEach((path) => {
-    const codeBaseArray = [`http.${path.method}(\`\${baseURL}${path.pathname}\`, () => {`]
+    const codeBaseArray = [`http.${path.method}(\`\${handlerUrl}${path.pathname}\`, () => {`]
     if (path.responses.length === 1) {
       // single response
       const res = path.responses[0]
@@ -68,14 +68,14 @@ export const writeHandlers = async (paths: PathNormalizedType[], options: Option
       }, [] as string[])
       .join(", ")
     const importResponses = `import { ${responseNames} } from "../response/${tag}"\n`
-    const baseURL = 'const baseURL = "*"'
+    const handlerUrl = `const handlerUrl = "${options.handlerUrl}"`
 
     const handlerName = camelCase(tag)
     const mockHandlers = [
       `${importMSW}`,
       `${importResponses}`,
       ``,
-      `${baseURL}`,
+      `${handlerUrl}`,
       ``,
       `export const ${handlerName}Handlers = [`,
       `  ${handlers.join("\n\n")}`,
