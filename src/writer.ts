@@ -5,6 +5,7 @@ import { camelCase, pascalCase } from "change-case-all"
 import { existsSync, mkdirSync, writeFileSync } from "fs"
 import { isReference } from "oazapfts/generate"
 import * as path from "path"
+import { GEN_COMMENT } from "./defaults"
 
 export const writeHandlers = (paths: PathNormalizedType[], options: Options) => {
   const firstTags = Array.from(new Set(paths.map((path) => path.tags[0])))
@@ -87,7 +88,7 @@ export const writeHandlers = (paths: PathNormalizedType[], options: Options) => 
       mkdirSync(directory, { recursive: true })
     }
     const fileName = path.join(directory, `${tag}.ts`)
-    writeFileSync(fileName, mockHandlers)
+    writeFileSync(fileName, GEN_COMMENT + mockHandlers)
     console.log(`Generated Handler ${fileName}`)
   })
 
@@ -113,7 +114,7 @@ export const writeHandlers = (paths: PathNormalizedType[], options: Options) => 
     `]`,
   ].join("\n")
   const fileName = path.join(options.baseDir ?? "", "mockHandlers.ts")
-  writeFileSync(fileName, mockHandlers)
+  writeFileSync(fileName, GEN_COMMENT + mockHandlers)
   console.log(`Generated mock handlers ${fileName}`)
 }
 
@@ -212,7 +213,7 @@ export const writeResponses = async (paths: PathNormalizedType[], options: Optio
       options.isStatic || !needImportFaker ? "" : 'import { faker } from "../fakers"\n\n'
 
     const fileName = `${directory}/${tag}.ts`
-    writeFileSync(fileName, importFaker + responses.join("\n\n"))
+    writeFileSync(fileName, GEN_COMMENT + importFaker + responses.join("\n\n"))
     console.log(`Generated ${fileName}`)
   })
 
@@ -228,7 +229,7 @@ export const writeResponses = async (paths: PathNormalizedType[], options: Optio
     return ["export {", "  " + responseNames, '} from "./' + tag + '"'].join("\n")
   })
   const fileName = `${directory}/index.ts`
-  writeFileSync(fileName, importResponses.join("\n"))
+  writeFileSync(fileName, GEN_COMMENT + importResponses.join("\n"))
   console.log(`Generated ${fileName}`)
 }
 
@@ -245,7 +246,7 @@ export const writeSchema = (schemas: Record<string, SchemaOutputType>, options: 
   const importFaker = options.isStatic ? "" : 'import { faker } from "./fakers"\n\n'
 
   const outputFileName = path.join(`${options.baseDir}`, "schemas.ts")
-  writeFileSync(outputFileName, importFaker + generatedVars)
+  writeFileSync(outputFileName, GEN_COMMENT + importFaker + generatedVars)
   console.log(`Generated schema ${outputFileName}`)
 }
 
@@ -263,7 +264,7 @@ export const writeFaker = (options: Options) => {
   ].join("\n")
 
   const outputFileName = path.join(`${options.baseDir}`, "fakers.ts")
-  writeFileSync(outputFileName, importFaker + fakerDeclare)
+  writeFileSync(outputFileName, GEN_COMMENT + importFaker + fakerDeclare)
   console.log(`Generated fakers ${outputFileName}`)
 }
 
