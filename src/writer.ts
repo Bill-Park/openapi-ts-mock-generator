@@ -5,7 +5,6 @@ import { camelCase, pascalCase } from "change-case-all"
 import { existsSync, mkdirSync } from "fs"
 import { writeFile } from "fs/promises"
 import { isReference } from "oazapfts/generate"
-import { OpenAPIV3_1 } from "openapi-types"
 import * as prettier from "prettier"
 
 export const writeApi = async (paths: PathNormalizedType[], options: Options) => {
