@@ -19,7 +19,7 @@ export const writeHandlers = async (paths: PathNormalizedType[], options: Option
   )
 
   paths.forEach((path) => {
-    const codeBaseArray = [`http.${path.method}('\${baseURL}${path.pathname}', () => {`]
+    const codeBaseArray = [`http.${path.method}(\`\${baseURL}${path.pathname}\`, () => {`]
     if (path.responses.length === 1) {
       // single response
       const res = path.responses[0]
