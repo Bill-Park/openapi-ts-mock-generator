@@ -80,15 +80,11 @@ export const writeHandlers = async (paths: PathNormalizedType[], options: Option
       `  ${handlers.join("\n\n")}`,
       `]`,
     ].join("\n")
-    const directory = `${options.baseDir}/handlers`
+    const directory = path.join(options.baseDir ?? "", "handlers")
     if (!existsSync(directory)) {
       mkdirSync(directory)
     }
-    const fileName = `${directory}/${tag}.ts`
-    const formattedContent = await prettier.format(mockHandlers, {
-      parser: "typescript",
-    })
-    await writeFile(fileName, formattedContent)
+    const fileName = path.join(directory, `${tag}.ts`)
     console.log(`Generated Handler ${fileName}`)
   })
 
@@ -113,7 +109,7 @@ export const writeHandlers = async (paths: PathNormalizedType[], options: Option
     `  ${handlersArrayItem}`,
     `]`,
   ].join("\n")
-  const fileName = `${options.baseDir}/mockHandlers.ts`
+  const fileName = path.join(options.baseDir ?? "", "mockHandlers.ts")
 
   const mockHandlersPretty = await prettier.format(mockHandlers, {
     parser: "typescript",
@@ -180,7 +176,7 @@ export const writeResponses = async (paths: PathNormalizedType[], options: Optio
     codeBasePerTag[path.tags[0]].push(pathResponsesWithComment)
   })
 
-  const directory = `${options.baseDir}/response`
+  const directory = path.join(options.baseDir ?? "", "response")
   if (!existsSync(directory)) {
     mkdirSync(directory, { recursive: true })
   }
@@ -202,10 +198,6 @@ export const writeSchema = async (schemas: Record<string, SchemaOutputType>, opt
       return `export const ${varName} = ${JSON.stringify(varValue, null, 2)}`
     })
     .join("\n\n")
-  const formattedContent = await prettier.format(generatedVars, {
-    parser: "typescript",
-  })
-  const outputFileName = `${options.baseDir}/schemas.ts`
-  await writeFile(outputFileName, formattedContent)
+  const outputFileName = path.join(`${options.baseDir}`, "schemas.ts")
   console.log(`Generated schema ${outputFileName}`)
 }
