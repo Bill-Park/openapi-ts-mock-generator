@@ -36,6 +36,9 @@ cli
   .option("-s, --static", "Generate static mocks.", {
     default: false,
   })
+  .option("-t, --generate-target <targets>", "Comma separated list of targets to generate.", {
+    default: "api,schema",
+  })
   .example("openapi-ts-mock-generator ./openapi.json")
   .example("openapi-ts-mock-generator http://127.0.0.1/openapi.json")
   .action(async (path, userOptions) => {

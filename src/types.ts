@@ -10,6 +10,7 @@ export type Options = {
   specialPath?: string
   handlerUrl: string
   fakerLocale: string
+  generateTarget: string
 }
 
 export type SchemaOutputType = string | number | boolean | null | undefined | Date

@@ -9,6 +9,7 @@ export const defaultOptions: Options = {
   static: true,
   handlerUrl: "*",
   fakerLocale: "ko",
+  generateTarget: "api,schema",
 }
 
 export const ARRAY_MIN_LENGTH = 1
