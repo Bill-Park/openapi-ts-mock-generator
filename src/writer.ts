@@ -261,9 +261,11 @@ export const toUnquotedJSON = (
     const firstElementSpace = singleLine ? "" : "  "
     return ["[", firstElementSpace + results.join(", "), "]"].join(lineBreak + prefixSpace)
   } else if (typeof param === "object") {
+    const firstElementSpace = singleLine ? " " : "  "
+    const lastComma = singleLine ? ", " : ","
     const results = Object.entries(param)
       .map(
-        ([key, value]) => `  ${key}: ${toUnquotedJSON(value, { ...options, depth: depth + 1 })},`
+        ([key, value]) => `${firstElementSpace}${key}: ${toUnquotedJSON(value, { ...options, depth: depth + 1 })}${lastComma}`
       )
       .join(lineBreak + prefixSpace)
     return ["{", `${results}`, "}"].join(lineBreak + prefixSpace)

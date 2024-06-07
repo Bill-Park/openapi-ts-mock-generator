@@ -241,11 +241,21 @@ export const refSchemaParser = (ref: string, refs: SwaggerParser.$Refs) => {
   return { name: schemaName, value: schemaValue }
 }
 
-const getFakerValue = (value: object): SchemaOutputType => {
+const getFakerValue = (value: object, options:{isStatic:boolean}): SchemaOutputType => {
   if ("value" in value) {
     // value type, use directly
     return value.value as SchemaOutputType
-  } else if ("module" in value && "type" in value) {
+  }
+  if ("module" in value && "type" in value) {
+    // dynamic faker
+    if (options.isStatic === false) {
+      const fakerOption = "options" in value ? toUnquotedJSON(value.options, {
+        depth: 0,
+        isStatic: options.isStatic,
+        singleLine: true
+      }) : ""
+      return `faker.${value.module}.${value.type}(${fakerOption})`
+    }
     // faker type, make faker
     const fakerModule = faker[value.module as keyof typeof faker]
     if (fakerModule === undefined) {
@@ -259,6 +269,7 @@ const getFakerValue = (value: object): SchemaOutputType => {
     }
     return "options" in value ? fakerFunc(value.options) : fakerFunc()
   }
+  return undefined
 }
 
 export const specialFakerParser = (options: Options) => {
@@ -278,7 +289,9 @@ export const specialFakerParser = (options: Options) => {
 
   const titleSpecial = Object.entries(titleSpecialKey).reduce(
     (acc, [key, value]) => {
-      const fakerValue = getFakerValue(value)
+      const fakerValue = getFakerValue(value,{
+        isStatic: options.static
+      })
       acc[key] = fakerValue
       return acc
     },
@@ -287,7 +300,10 @@ export const specialFakerParser = (options: Options) => {
 
   const descriptionSpecial = Object.entries(descriptionSpecialKey).reduce(
     (acc, [key, value]) => {
-      const fakerValue = getFakerValue(value)
+      const fakerValue = getFakerValue(value, {
+        isStatic: options.static
+      
+      })
       acc[key] = fakerValue
       return acc
     },
