@@ -40,7 +40,7 @@ export const generateSchema = async (options: Options) => {
   const specialFakers = specialFakerParser(options)
   return Object.entries(sampleSchemas).reduce(
     (acc, [schemaName, schema]) => {
-      acc[schemaName] = parseSchema(schema, specialFakers, options.static, {}) as SchemaOutputType
+      acc[schemaName] = parseSchema(schema, specialFakers, options, {}) as SchemaOutputType
       return acc
     },
     {} as Record<string, SchemaOutputType>
@@ -99,7 +99,7 @@ export const generateAPI = async (options: Options) => {
                 // empty object return undefined
                 return undefined
               }
-              return parseSchema(schema ?? {}, specialFakers, options.static, {})
+              return parseSchema(schema ?? {}, specialFakers, options, {})
             })()
 
             return {

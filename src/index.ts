@@ -27,5 +27,5 @@ export const main = async (options: Options) => {
     writeSchema(generatedSchema, options)
   }
 
-  if (options.static === false) writeFaker(options)
+  if (options.isStatic === false) writeFaker(options)
 }

@@ -6,7 +6,7 @@ export const defaultOptions: Options = {
   baseDir: "./",
   arrayMinLength: 1,
   arrayMaxLength: 3,
-  static: true,
+  isStatic: true,
   handlerUrl: "*",
   fakerLocale: "ko",
   generateTarget: "api,schema",

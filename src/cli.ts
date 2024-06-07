@@ -45,6 +45,7 @@ cli
     const options: Options = {
       path: path,
       ...userOptions,
+      isStatic: userOptions.static,
       fakerLocale: userOptions.locales,
       includeCodes: userOptions.includeCodes
         ? userOptions.includeCodes

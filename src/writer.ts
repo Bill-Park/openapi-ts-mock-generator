@@ -142,12 +142,12 @@ export const writeResponses = async (paths: PathNormalizedType[], options: Optio
       ]
       if (res.schema?.type === "ref") {
         const { name, value } = refSchemaParser(res.schema.value.$ref, refs)
-        const outputSchema = parseSchema(value, specialFakers, options.static)
+        const outputSchema = parseSchema(value, specialFakers, options)
         codeBaseArray.push(`  // Schema is ${name}`)
         codeBaseArray.push(
           `  return ${toUnquotedJSON(outputSchema, {
             depth: 1,
-            isStatic: options.static,
+            isStatic: options.isStatic,
           })}`
         )
       } else if (res.schema?.type === "array") {
@@ -156,23 +156,23 @@ export const writeResponses = async (paths: PathNormalizedType[], options: Optio
           const outputSchema = getRandomLengthArray(
             options.arrayMinLength,
             options.arrayMaxLength
-          ).map(() => parseSchema(value, specialFakers, options.static))
+          ).map(() => parseSchema(value, specialFakers, options))
           codeBaseArray.push(`  // Schema is ${name} array`)
           codeBaseArray.push(
             `  return ${toUnquotedJSON(outputSchema, {
               depth: 1,
-              isStatic: options.static,
+              isStatic: options.isStatic,
             })}`
           )
         } else {
           const outputSchema = getRandomLengthArray(
             options.arrayMinLength,
             options.arrayMaxLength
-          ).map(() => res.schema && parseSchema(res.schema.value, specialFakers, options.static))
+          ).map(() => res.schema && parseSchema(res.schema.value, specialFakers, options))
           codeBaseArray.push(
             `  return ${toUnquotedJSON(outputSchema, {
               depth: 1,
-              isStatic: options.static,
+              isStatic: options.isStatic,
             })}`
           )
         }
@@ -180,12 +180,12 @@ export const writeResponses = async (paths: PathNormalizedType[], options: Optio
         const firstSchema = res.schema.value.anyOf?.[0]
         if (isReference(firstSchema)) {
           const { name, value } = refSchemaParser(firstSchema.$ref, refs)
-          const outputSchema = parseSchema(value, specialFakers, options.static)
+          const outputSchema = parseSchema(value, specialFakers, options)
           codeBaseArray.push(`  // Schema is ${name}`)
           codeBaseArray.push(
             `  return ${toUnquotedJSON(outputSchema, {
               depth: 1,
-              isStatic: options.static,
+              isStatic: options.isStatic,
             })}`
           )
         } else {
@@ -207,7 +207,7 @@ export const writeResponses = async (paths: PathNormalizedType[], options: Optio
   }
 
   Object.entries(codeBasePerTag).forEach(([tag, responses]) => {
-    const importFaker = options.static ? "" : 'import { faker } from "../fakers"\n\n'
+    const importFaker = options.isStatic ? "" : 'import { faker } from "../fakers"\n\n'
 
     const fileName = `${directory}/${tag}.ts`
     writeFileSync(fileName, importFaker + responses.join("\n\n"))
@@ -235,12 +235,12 @@ export const writeSchema = (schemas: Record<string, SchemaOutputType>, options: 
   const generatedVars = Object.entries(schemas)
     .map(([varName, varValue]) => {
       return `export const ${varName}Mock = ${toUnquotedJSON(varValue, {
-        isStatic: options.static,
+        isStatic: options.isStatic,
       })}`
     })
     .join("\n\n")
 
-  const importFaker = options.static ? "" : 'import { faker } from "./fakers"\n\n'
+  const importFaker = options.isStatic ? "" : 'import { faker } from "./fakers"\n\n'
 
   const outputFileName = path.join(`${options.baseDir}`, "schemas.ts")
   writeFileSync(outputFileName, importFaker + generatedVars)

@@ -4,7 +4,7 @@ export type Options = {
   path: string
   arrayMinLength?: number
   arrayMaxLength?: number
-  static: boolean
+  isStatic: boolean
   includeCodes?: number[]
   baseDir?: string
   specialPath?: string
