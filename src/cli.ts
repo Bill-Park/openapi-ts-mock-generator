@@ -40,12 +40,7 @@ cli
   .action(async (path, userOptions) => {
     const options: Options = {
       path: path,
-      baseDir: userOptions.baseDir,
-      arrayMinLength: userOptions.arrayMinLength,
-      arrayMaxLength: userOptions.arrayMaxLength,
-      static: userOptions.static,
-      specialPath: userOptions.specialPath,
-      handlerUrl: userOptions.handlerUrl,
+      ...userOptions,
       fakerLocale: userOptions.locales,
       includeCodes: userOptions.includeCodes
         ? userOptions.includeCodes
