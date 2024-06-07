@@ -185,8 +185,10 @@ export const writeResponses = async (paths: PathNormalizedType[], options: Optio
   }
 
   Object.entries(codeBasePerTag).forEach(([tag, responses]) => {
+    const importFaker = options.static ? "" : 'import { faker } from "../fakers"\n\n'
+
     const fileName = `${directory}/${tag}.ts`
-    writeFileSync(fileName, responses.join("\n\n"))
+    writeFileSync(fileName, importFaker + responses.join("\n\n"))
     console.log(`Generated ${fileName}`)
   })
 }
@@ -198,8 +200,11 @@ export const writeSchema = (schemas: Record<string, SchemaOutputType>, options: 
       return `export const ${varName}Mock = ${toUnquotedJSON(varValue, 0, options.static)}`
     })
     .join("\n\n")
+
+  const importFaker = options.static ? "" : 'import { faker } from "./fakers"\n\n'
+
   const outputFileName = path.join(`${options.baseDir}`, "schemas.ts")
-  writeFileSync(outputFileName, generatedVars)
+  writeFileSync(outputFileName, importFaker + generatedVars)
   console.log(`Generated schema ${outputFileName}`)
 }
 
@@ -209,7 +214,7 @@ export const writeFaker = (options: Options) => {
     mkdirSync(directory, { recursive: true })
   }
   const localeOption = options.fakerLocale.replace(",", ", ")
-  const fakerImport = `import { Faker, ${localeOption} } from "@faker-js/faker"\n\n`
+  const importFaker = `import { Faker, ${localeOption} } from "@faker-js/faker"\n\n`
   const fakerDeclare = [
     "export const faker = new Faker({",
     `  locale: [${localeOption}]`,
@@ -217,7 +222,7 @@ export const writeFaker = (options: Options) => {
   ].join("\n")
 
   const outputFileName = path.join(`${options.baseDir}`, "fakers.ts")
-  writeFileSync(outputFileName, fakerImport + fakerDeclare)
+  writeFileSync(outputFileName, importFaker + fakerDeclare)
   console.log(`Generated fakers ${outputFileName}`)
 }
 
