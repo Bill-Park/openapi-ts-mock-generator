@@ -31,7 +31,7 @@ export const parseSchema = (
   }
 
   if (schemaValue.type === "object") {
-    if (schemaValue.properties === undefined) return undefined
+    if (schemaValue.properties === undefined) return {}
     return Object.entries(schemaValue.properties).reduce(
       (acc, [key, field]) => {
         acc[key] = parseSchema(field, outputSchema) as SchemaOutputType
