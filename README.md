@@ -62,8 +62,12 @@ generate faker data.
 }
 ```
 
-## Formatter
+## Prettier
 
-When apply prettier format before writeFile, I got ERR_INVALID_ARG_VALUE error.
+Output code is not formatted.
+You can use prettier to format code.
 
-Please run formatter like prettier after generate file.
+```bash
+npx prettier --write .
+npm run fmt
+```
