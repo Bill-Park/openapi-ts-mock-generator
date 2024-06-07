@@ -1,7 +1,6 @@
 import {
   ARRAY_MAX_LENGTH,
   ARRAY_MIN_LENGTH,
-  FAKER_SEED,
   MAX_INTEGER,
   MAX_NUMBER,
   MAX_STRING_LENGTH,
@@ -10,20 +9,15 @@ import {
   MIN_NUMBER,
   MIN_STRING_LENGTH,
   MIN_WORD_LENGTH,
+  faker,
 } from "./defaults"
 import { Options, ParseSchemaType, SchemaOutputType } from "./types"
 import SwaggerParser from "@apidevtools/swagger-parser"
-import { Faker, ko } from "@faker-js/faker"
 import { pascalCase } from "change-case-all"
 import { existsSync, readFileSync } from "fs"
 import { isReference } from "oazapfts/generate"
 import { OpenAPIV3_1 } from "openapi-types"
 import { join } from "path"
-
-const faker = new Faker({
-  locale: [ko],
-})
-faker.seed(FAKER_SEED)
 
 export const parseSchema = (
   schemaValue: OpenAPIV3_1.ReferenceObject | OpenAPIV3_1.SchemaObject,

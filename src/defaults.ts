@@ -1,4 +1,5 @@
 import { Options } from "./types"
+import { Faker, ko } from "@faker-js/faker"
 
 export const defaultOptions: Options = {
   path: "",
@@ -24,4 +25,9 @@ export const MAX_NUMBER = 100
 export const MIN_WORD_LENGTH = 0
 export const MAX_WORD_LENGTH = 3
 
-export const FAKER_SEED = 1
+const FAKER_SEED = 1
+
+export const faker = new Faker({
+  locale: [ko],
+})
+faker.seed(FAKER_SEED)
