@@ -6,7 +6,6 @@ import { existsSync, mkdirSync } from "fs"
 import { writeFile } from "fs/promises"
 import { isReference } from "oazapfts/generate"
 import * as path from "path"
-import * as prettier from "prettier"
 
 export const writeHandlers = async (paths: PathNormalizedType[], options: Options) => {
   const firstTags = Array.from(new Set(paths.map((path) => path.tags[0])))
@@ -85,6 +84,7 @@ export const writeHandlers = async (paths: PathNormalizedType[], options: Option
       mkdirSync(directory)
     }
     const fileName = path.join(directory, `${tag}.ts`)
+    await writeFile(fileName, mockHandlers)
     console.log(`Generated Handler ${fileName}`)
   })
 
@@ -111,10 +111,7 @@ export const writeHandlers = async (paths: PathNormalizedType[], options: Option
   ].join("\n")
   const fileName = path.join(options.baseDir ?? "", "mockHandlers.ts")
 
-  const mockHandlersPretty = await prettier.format(mockHandlers, {
-    parser: "typescript",
-  })
-  await writeFile(fileName, mockHandlersPretty)
+  await writeFile(fileName, mockHandlers)
   console.log(`Generated mock handlers ${fileName}`)
 }
 
@@ -182,11 +179,8 @@ export const writeResponses = async (paths: PathNormalizedType[], options: Optio
   }
 
   Object.entries(codeBasePerTag).forEach(async ([tag, responses]) => {
-    const formattedContent = await prettier.format(responses.join("\n\n"), {
-      parser: "typescript",
-    })
     const fileName = `${directory}/${tag}.ts`
-    await writeFile(fileName, formattedContent)
+    await writeFile(fileName, responses.join("\n\n"))
     console.log(`Generated ${fileName}`)
   })
 }
@@ -199,5 +193,6 @@ export const writeSchema = async (schemas: Record<string, SchemaOutputType>, opt
     })
     .join("\n\n")
   const outputFileName = path.join(`${options.baseDir}`, "schemas.ts")
+  await writeFile(outputFileName, generatedVars)
   console.log(`Generated schema ${outputFileName}`)
 }
