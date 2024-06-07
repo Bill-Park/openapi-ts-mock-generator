@@ -2,7 +2,6 @@ import { OpenAPIV3_1 } from "openapi-types"
 
 export type Options = {
   path: string
-  output: string
   arrayMinLength?: number
   arrayMaxLength?: number
   static?: boolean

@@ -2,7 +2,7 @@ import { Options } from "./types"
 
 export const defaultOptions: Options = {
   path: "",
-  output: "",
+  baseDir: "./",
   arrayMinLength: 1,
   arrayMaxLength: 3,
   static: true,
