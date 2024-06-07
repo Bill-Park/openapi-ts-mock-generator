@@ -1,6 +1,6 @@
 {
   "name": "openapi-ts-mock-generator",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "typescript mock data generator based openapi",
   "scripts": {
     "build": "tsup ./src",
