@@ -4,7 +4,8 @@
   "description": "typescript mock data generator based openapi",
   "scripts": {
     "build": "tsup ./src",
-    "test": "vitest run"
+    "test": "vitest run",
+    "pretty": "npx prettier . --write --tab-width 2 --print-width 100 --no-semi --single-quote false"
   },
   "repository": {
     "type": "git",

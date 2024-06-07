@@ -24,7 +24,7 @@ export const parseSchema = (
   schemaValue: OpenAPIV3_1.ReferenceObject | OpenAPIV3_1.SchemaObject,
   specialSchema: ReturnType<typeof specialFakerParser>,
   isStatic: boolean,
-  outputSchema: ParseSchemaType = {}
+  outputSchema: ParseSchemaType = {},
 ): ParseSchemaType => {
   if (isReference(schemaValue)) {
     console.warn("can't parse reference schema", schemaValue, schemaValue.$ref)
@@ -38,7 +38,7 @@ export const parseSchema = (
         acc[key] = parseSchema(field, specialSchema, isStatic, outputSchema) as SchemaOutputType
         return acc
       },
-      {} as Record<string, SchemaOutputType>
+      {} as Record<string, SchemaOutputType>,
     )
   } else if (schemaValue.enum !== undefined) {
     // enum value
@@ -57,7 +57,7 @@ export const parseSchema = (
     return faker.helpers.arrayElement(
       allOfValue.map((field) => {
         return parseSchema(field, specialSchema, isStatic, outputSchema)
-      })
+      }),
     )
   } else if (schemaValue.anyOf !== undefined) {
     // anyOf value, select one or more. ex) string or null
@@ -65,7 +65,7 @@ export const parseSchema = (
     return faker.helpers.arrayElement(
       anyOfValue.map((field) => {
         return parseSchema(field, specialSchema, isStatic, outputSchema)
-      })
+      }),
     )
   } else if (schemaValue.oneOf !== undefined) {
     // oneOf value, exactly one. Can't find example
@@ -73,13 +73,13 @@ export const parseSchema = (
     return faker.helpers.arrayElement(
       oneOfValue.map((field) => {
         return parseSchema(field, specialSchema, isStatic, outputSchema)
-      })
+      }),
     )
   } else if (schemaValue.type === "array") {
     // array
     const arrayValue = schemaValue.items
     return getRandomLengthArray().map(() =>
-      parseSchema(arrayValue, specialSchema, isStatic, outputSchema)
+      parseSchema(arrayValue, specialSchema, isStatic, outputSchema),
     ) as (SchemaOutputType | Record<string, SchemaOutputType>)[]
   }
   return valueGenerator(schemaValue, specialSchema, isStatic)
@@ -98,7 +98,7 @@ const uuidToB64 = (uuid: string) => {
 const valueGenerator = (
   schemaValue: OpenAPIV3_1.SchemaObject,
   specialSchema: ReturnType<typeof specialFakerParser>,
-  isStatic: boolean
+  isStatic: boolean,
 ): ParseSchemaType => {
   // if title or description in special keys
   // return special faker data
@@ -226,7 +226,7 @@ const valueGenerator = (
 
 export const getRandomLengthArray = (
   min: number = ARRAY_MIN_LENGTH,
-  max: number = ARRAY_MAX_LENGTH
+  max: number = ARRAY_MAX_LENGTH,
 ) => {
   const length = faker.number.int({
     min,
@@ -241,7 +241,7 @@ export const refSchemaParser = (ref: string, refs: SwaggerParser.$Refs) => {
   return { name: schemaName, value: schemaValue }
 }
 
-const getFakerValue = (value: object, options:{isStatic:boolean}): SchemaOutputType => {
+const getFakerValue = (value: object, options: { isStatic: boolean }): SchemaOutputType => {
   if ("value" in value) {
     // value type, use directly
     return value.value as SchemaOutputType
@@ -249,11 +249,14 @@ const getFakerValue = (value: object, options:{isStatic:boolean}): SchemaOutputT
   if ("module" in value && "type" in value) {
     // dynamic faker
     if (options.isStatic === false) {
-      const fakerOption = "options" in value ? toUnquotedJSON(value.options, {
-        depth: 0,
-        isStatic: options.isStatic,
-        singleLine: true
-      }) : ""
+      const fakerOption =
+        "options" in value
+          ? toUnquotedJSON(value.options, {
+              depth: 0,
+              isStatic: options.isStatic,
+              singleLine: true,
+            })
+          : ""
       return `faker.${value.module}.${value.type}(${fakerOption})`
     }
     // faker type, make faker
@@ -289,25 +292,24 @@ export const specialFakerParser = (options: Options) => {
 
   const titleSpecial = Object.entries(titleSpecialKey).reduce(
     (acc, [key, value]) => {
-      const fakerValue = getFakerValue(value,{
-        isStatic: options.static
+      const fakerValue = getFakerValue(value, {
+        isStatic: options.static,
       })
       acc[key] = fakerValue
       return acc
     },
-    {} as Record<string, SchemaOutputType>
+    {} as Record<string, SchemaOutputType>,
   )
 
   const descriptionSpecial = Object.entries(descriptionSpecialKey).reduce(
     (acc, [key, value]) => {
       const fakerValue = getFakerValue(value, {
-        isStatic: options.static
-      
+        isStatic: options.static,
       })
       acc[key] = fakerValue
       return acc
     },
-    {} as Record<string, SchemaOutputType>
+    {} as Record<string, SchemaOutputType>,
   )
 
   return { titleSpecial, descriptionSpecial }

@@ -43,7 +43,7 @@ export const generateSchema = async (options: Options) => {
       acc[schemaName] = parseSchema(schema, specialFakers, options.static, {}) as SchemaOutputType
       return acc
     },
-    {} as Record<string, SchemaOutputType>
+    {} as Record<string, SchemaOutputType>,
   )
 }
 

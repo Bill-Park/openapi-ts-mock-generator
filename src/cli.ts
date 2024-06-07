@@ -15,7 +15,7 @@ cli
     "Comma separated list of status codes to generate responses for.",
     {
       default: undefined,
-    }
+    },
   )
   .option("-m, --array-min-length <length>", "Minimum array length.", {
     default: "1",
@@ -23,7 +23,7 @@ cli
   .option("-M, --array-max-length <length>", "Maximum array length.", {
     default: "3",
   })
-  
+
   .option("--special-path <specialPath>", "Generate special faker functions.", {
     default: undefined,
   })
