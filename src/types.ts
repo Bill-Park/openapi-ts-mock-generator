@@ -11,10 +11,14 @@ export type Options = {
 
 export type SchemaOutputType = string | number | boolean | null | undefined | Date
 
-export type ParseSchemaType =
+type NestedSchemaOutputType<T> =
+  | {
+      [K in keyof T]: T[K] extends object ? NestedSchemaOutputType<T[K]> : T[K]
+    }
   | SchemaOutputType
-  | Record<string, SchemaOutputType>
-  | (SchemaOutputType | Record<string, SchemaOutputType>)[]
+  | {}
+
+export type ParseSchemaType = NestedSchemaOutputType<string>
 
 export enum HttpMethods {
   GET = "get",

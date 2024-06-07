@@ -25,7 +25,7 @@ faker.seed(FAKER_SEED)
 
 export const parseSchema = (
   schemaValue: OpenAPIV3_1.ReferenceObject | OpenAPIV3_1.SchemaObject,
-  outputSchema: ParseSchemaType = {} as ParseSchemaType
+  outputSchema: ParseSchemaType = {}
 ): ParseSchemaType => {
   if (isReference(schemaValue)) {
     console.warn("can't parse reference schema", schemaValue, schemaValue.$ref)
