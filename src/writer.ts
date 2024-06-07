@@ -75,7 +75,7 @@ export const writeHandlers = async (paths: PathNormalizedType[], options: Option
       `${importMSW}`,
       `${importResponses}`,
       ``,
-      `const ${handlerName}Handlers = [`,
+      `export const ${handlerName}Handlers = [`,
       `  ${handlers.join("\n\n")}`,
       `]`,
     ].join("\n")
@@ -90,6 +90,35 @@ export const writeHandlers = async (paths: PathNormalizedType[], options: Option
     await writeFile(fileName, formattedContent)
     console.log(`Generated Handler ${fileName}`)
   })
+
+  // make mockHandlers.ts for merge all handlers
+  const handlersImport = Object.keys(handlersPerTag)
+    .map((tag) => {
+      const handlerName = `${camelCase(tag)}Handlers`
+      return `import { ${handlerName} } from "./handlers/${tag}"`
+    })
+    .join("\n")
+  const handlersArrayItem = Object.keys(handlersPerTag)
+    .map((tag) => {
+      const handlerName = `${camelCase(tag)}Handlers`
+      return `...${handlerName},`
+    })
+    .join("\n")
+
+  const mockHandlers = [
+    `${handlersImport}`,
+    ``,
+    `export const handlers = [`,
+    `  ${handlersArrayItem}`,
+    `]`,
+  ].join("\n")
+  const fileName = `${options.baseDir}/mockHandlers.ts`
+
+  const mockHandlersPretty = await prettier.format(mockHandlers, {
+    parser: "typescript",
+  })
+  await writeFile(fileName, mockHandlersPretty)
+  console.log(`Generated mock handlers ${fileName}`)
 }
 
 export const writeResponses = async (paths: PathNormalizedType[], options: Options) => {
