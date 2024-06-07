@@ -144,7 +144,7 @@ export const writeResponses = async (paths: PathNormalizedType[], options: Optio
         const { name, value } = refSchemaParser(res.schema.value.$ref, refs)
         const outputSchema = parseSchema(value, specialFakers, options.static)
         codeBaseArray.push(`  // Schema is ${name}`)
-        codeBaseArray.push(`  return ${toUnquotedJSON(outputSchema, 1)}`)
+        codeBaseArray.push(`  return ${toUnquotedJSON(outputSchema, 1, options.static)}`)
       } else if (res.schema?.type === "array") {
         if (isReference(res.schema.value)) {
           const { name, value } = refSchemaParser(res.schema.value.$ref, refs)
@@ -152,12 +152,12 @@ export const writeResponses = async (paths: PathNormalizedType[], options: Optio
             parseSchema(value, specialFakers, options.static)
           )
           codeBaseArray.push(`  // Schema is ${name} array`)
-          codeBaseArray.push(`  return ${toUnquotedJSON(outputSchema, 1)}`)
+          codeBaseArray.push(`  return ${toUnquotedJSON(outputSchema, 1, options.static)}`)
         } else {
           const outputSchema = getRandomLengthArray().map(
             () => res.schema && parseSchema(res.schema.value, specialFakers, options.static)
           )
-          codeBaseArray.push(`  return ${toUnquotedJSON(outputSchema, 1)}`)
+          codeBaseArray.push(`  return ${toUnquotedJSON(outputSchema, 1, options.static)}`)
         }
       } else if (res.schema?.type === "anyOf") {
         const firstSchema = res.schema.value.anyOf?.[0]
@@ -165,7 +165,7 @@ export const writeResponses = async (paths: PathNormalizedType[], options: Optio
           const { name, value } = refSchemaParser(firstSchema.$ref, refs)
           const outputSchema = parseSchema(value, specialFakers, options.static)
           codeBaseArray.push(`  // Schema is ${name}`)
-          codeBaseArray.push(`  return ${toUnquotedJSON(outputSchema, 1)}`)
+          codeBaseArray.push(`  return ${toUnquotedJSON(outputSchema, 1, options.static)}`)
         } else {
           codeBaseArray.push(`  return ${res.schema.value}`)
         }
@@ -195,7 +195,7 @@ export const writeSchema = (schemas: Record<string, SchemaOutputType>, options: 
   // key is schema name, value is generated schema value
   const generatedVars = Object.entries(schemas)
     .map(([varName, varValue]) => {
-      return `export const ${varName}Mock = ${toUnquotedJSON(varValue)}`
+      return `export const ${varName}Mock = ${toUnquotedJSON(varValue, 0, options.static)}`
     })
     .join("\n\n")
   const outputFileName = path.join(`${options.baseDir}`, "schemas.ts")
@@ -203,21 +203,42 @@ export const writeSchema = (schemas: Record<string, SchemaOutputType>, options: 
   console.log(`Generated schema ${outputFileName}`)
 }
 
-const toUnquotedJSON = (param: ParseSchemaType, depth = 0): string => {
+export const toUnquotedJSON = (
+  param: ParseSchemaType,
+  depth = 0,
+  isStatic = false,
+  singleLine = false
+): string => {
   const prefixSpace = " ".repeat(depth * 2) // for indent
+  const lineBreak = singleLine ? "" : "\n"
+
   if (param === null) {
     return "null"
   } else if (Array.isArray(param)) {
-    const results = param.map((elem) => toUnquotedJSON(elem, depth + 1))
-    return ["[", "  " + results.join(", "), "]"].join(`\n` + prefixSpace)
+    const results = param.map((elem) => toUnquotedJSON(elem, depth + 1, isStatic))
+    const firstElementSpace = singleLine ? "" : "  "
+    return ["[", firstElementSpace + results.join(", "), "]"].join(lineBreak + prefixSpace)
   } else if (typeof param === "object") {
     const results = Object.entries(param)
-      .map(([key, value]) => `  ${key}: ${toUnquotedJSON(value, depth + 1)},`)
-      .join("\n" + prefixSpace)
-    return ["{", `${results}`, "}"].join(`\n` + prefixSpace)
+      .map(([key, value]) => `  ${key}: ${toUnquotedJSON(value, depth + 1, isStatic)},`)
+      .join(lineBreak + prefixSpace)
+    return ["{", `${results}`, "}"].join(lineBreak + prefixSpace)
+  } else if (
+    typeof param === "string" &&
+    isStatic === false &&
+    (param.startsWith("faker") || param.startsWith("Buffer.from(faker"))
+  ) {
+    return param // dynamic mode, start with faker or Buffer.from(faker)
   } else if (typeof param === "string" && param.endsWith(" as const")) {
     // split " as const" from string
     return `"${param.replace(/(\w+)(\ as\ const)?$/, "$1")}" as const`
   }
   return JSON.stringify(param)
+}
+
+export const multiLineStr = (str: string) => {
+  // line break to space
+  // multiple space to single space
+  // space + dot to dot
+  return str.replace(/\n/g, " ").replace(/\s+/g, " ").replace(/\s\./g, ".").trim()
 }

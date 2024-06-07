@@ -12,6 +12,7 @@ import {
   faker,
 } from "./defaults"
 import { Options, ParseSchemaType, SchemaOutputType } from "./types"
+import { multiLineStr, toUnquotedJSON } from "./writer"
 import SwaggerParser from "@apidevtools/swagger-parser"
 import { pascalCase } from "change-case-all"
 import { existsSync, readFileSync } from "fs"
@@ -41,8 +42,10 @@ export const parseSchema = (
     )
   } else if (schemaValue.enum !== undefined) {
     // enum value
-    const enumValue = faker.helpers.arrayElement(schemaValue.enum)
-    if (typeof enumValue === "string") return enumValue + " as const"
+    const enumValue = isStatic
+      ? faker.helpers.arrayElement(schemaValue.enum)
+      : `faker.helpers.arrayElement(${toUnquotedJSON(schemaValue.enum, 0, isStatic, true)})`
+    if (isStatic && typeof enumValue === "string") return enumValue + " as const"
     return enumValue
   } else if (schemaValue.allOf !== undefined) {
     // allOf value, sub model
@@ -104,89 +107,185 @@ const valueGenerator = (
 
   if (schemaValue.type === "string" && schemaValue.format === "date-time") {
     // date-time, 2017-07-21T17:32:28Z
-    return faker.date
-      .between({
-        from: "2020-01-01T00:00:00.000Z",
-        to: "2030-12-31T23:59:59.999Z",
-      })
-      .toISOString()
+    return isStatic
+      ? faker.date
+          .between({
+            from: "2020-01-01T00:00:00.000Z",
+            to: "2030-12-31T23:59:59.999Z",
+          })
+          .toISOString()
+      : multiLineStr(`
+          faker.date.between({
+            from: "2020-01-01T00:00:00.000Z",
+            to: "2030-12-31T23:59:59.999Z",
+          })
+          .toISOString()
+          `)
   } else if (schemaValue.type === "string" && schemaValue.format === "date") {
     // date, 2017-07-21
-    return faker.date
-      .between({
-        from: "2020-01-01T00:00:00.000Z",
-        to: "2030-12-31T23:59:59.999Z",
-      })
-      .toISOString()
-      .split("T")[0]
+    return isStatic
+      ? faker.date
+          .between({
+            from: "2020-01-01T00:00:00.000Z",
+            to: "2030-12-31T23:59:59.999Z",
+          })
+          .toISOString()
+          .split("T")[0]
+      : multiLineStr(`
+          faker.date.between({
+            from: "2020-01-01T00:00:00.000Z",
+            to: "2030-12-31T23:59:59.999Z",
+          })
+          .toISOString()
+          .split("T")[0]
+        `)
   } else if (schemaValue.type === "string" && schemaValue.pattern) {
-    return faker.helpers.fromRegExp(schemaValue.pattern)
+    return isStatic
+      ? faker.helpers.fromRegExp(schemaValue.pattern)
+      : `faker.helpers.fromRegExp(/${schemaValue.pattern}/)`
   } else if (schemaValue.type === "string" && schemaValue.title?.toLowerCase() === "b64uuid") {
     // generate base 64 uuid
     const baseUuid = faker.string.uuid()
-    return uuidToB64(baseUuid)
+    return isStatic
+      ? uuidToB64(baseUuid)
+      : multiLineStr(`
+          Buffer.from(faker.string.uuid().replace(/-/g, ""), "hex")
+          .toString("base64")
+          .replace(/\+/g, "-")
+          .replace(/\\//g, "_")
+          .replace(/=/g, "")
+        `)
   } else if (schemaValue.type === "string" && schemaValue.minLength && schemaValue.maxLength) {
     // string has max length
-    return faker.string.alphanumeric({
-      length: { min: schemaValue.minLength, max: schemaValue.maxLength },
-    })
+    return isStatic
+      ? faker.string.alphanumeric({
+          length: { min: schemaValue.minLength, max: schemaValue.maxLength },
+        })
+      : multiLineStr(`
+          faker.string.alphanumeric({
+            length: { min: ${schemaValue.minLength}, max: ${schemaValue.maxLength} },
+          })
+        `)
   } else if (schemaValue.type === "string" && schemaValue.maxLength) {
     // string has max length
     const minStringLength = Math.min(MIN_STRING_LENGTH, schemaValue.maxLength)
-    return faker.string.alphanumeric({
-      length: { min: minStringLength, max: schemaValue.maxLength },
-    })
+    return isStatic
+      ? faker.string.alphanumeric({
+          length: { min: minStringLength, max: schemaValue.maxLength },
+        })
+      : multiLineStr(`
+          faker.string.alphanumeric({
+            length: { min: ${minStringLength}, max: ${schemaValue.maxLength} },
+          })
+        `)
   } else if (schemaValue.type === "string" && schemaValue.minLength) {
     // string has min length
     const maxStringLength = Math.max(MAX_STRING_LENGTH, schemaValue.minLength)
-    return faker.string.alphanumeric({
-      length: { min: schemaValue.minLength, max: maxStringLength },
-    })
+    return isStatic
+      ? faker.string.alphanumeric({
+          length: { min: schemaValue.minLength, max: maxStringLength },
+        })
+      : multiLineStr(`
+          faker.string.alphanumeric({
+            length: { min: ${schemaValue.minLength}, max: ${maxStringLength} },
+          })
+        `)
   } else if (schemaValue.type === "string") {
-    return faker.string.alphanumeric({
-      length: { min: MIN_STRING_LENGTH, max: MAX_STRING_LENGTH },
-    })
+    return isStatic
+      ? faker.string.alphanumeric({
+          length: { min: MIN_STRING_LENGTH, max: MAX_STRING_LENGTH },
+        })
+      : multiLineStr(`
+      faker.string.alphanumeric({
+        length: { min: ${MIN_STRING_LENGTH}, max: ${MAX_STRING_LENGTH} },
+      })
+    `)
   } else if (schemaValue.type === "integer") {
-    return faker.number.int({ min: MIN_INTEGER, max: MAX_INTEGER })
+    return isStatic
+      ? faker.number.int({ min: MIN_INTEGER, max: MAX_INTEGER })
+      : multiLineStr(`
+          faker.number.int({ min: ${MIN_INTEGER}, max: ${MAX_INTEGER} })
+        `)
   } else if (schemaValue.type === "number" && schemaValue.maximum && schemaValue.minimum) {
-    return faker.number.float({
-      min: schemaValue.minimum,
-      max: schemaValue.maximum,
-      fractionDigits: 2,
-    })
+    return isStatic
+      ? faker.number.float({
+          min: schemaValue.minimum,
+          max: schemaValue.maximum,
+          fractionDigits: 2,
+        })
+      : multiLineStr(`
+          faker.number.float({
+            min: ${schemaValue.minimum},
+            max: ${schemaValue.maximum},
+            fractionDigits: 2,
+          })
+        `)
   } else if (schemaValue.type === "number" && schemaValue.maximum) {
-    return faker.number.float({
-      min: MIN_NUMBER,
-      max: schemaValue.maximum,
-      fractionDigits: 2,
-    })
+    return isStatic
+      ? faker.number.float({
+          min: MIN_NUMBER,
+          max: schemaValue.maximum,
+          fractionDigits: 2,
+        })
+      : multiLineStr(`
+          faker.number.float({
+            min: ${MIN_NUMBER},
+            max: ${schemaValue.maximum},
+            fractionDigits: 2,
+          })
+        `)
   } else if (schemaValue.type === "number" && schemaValue.minimum) {
-    return faker.number.float({
-      min: schemaValue.minimum,
-      max: MAX_NUMBER,
-      fractionDigits: 2,
-    })
+    return isStatic
+      ? faker.number.float({
+          min: schemaValue.minimum,
+          max: MAX_NUMBER,
+          fractionDigits: 2,
+        })
+      : multiLineStr(`
+          faker.number.float({
+            min: ${schemaValue.minimum},
+            max: ${MAX_NUMBER},
+            fractionDigits: 2,
+          })
+        `)
   } else if (schemaValue.type === "number") {
-    return faker.number.float({
-      min: MIN_NUMBER,
-      max: MAX_NUMBER,
-      fractionDigits: 2,
-    })
+    return isStatic
+      ? faker.number.float({
+          min: MIN_NUMBER,
+          max: MAX_NUMBER,
+          fractionDigits: 2,
+        })
+      : multiLineStr(`
+          faker.number.float({
+            min: ${MIN_NUMBER},
+            max: ${MAX_NUMBER},
+            fractionDigits: 2,
+          })
+        `)
   } else if (schemaValue.type === "boolean") {
-    return faker.datatype.boolean()
+    return isStatic ? faker.datatype.boolean() : "faker.datatype.boolean()"
   } else if (schemaValue.type === "null") {
     return null
   } else if (Object.keys(schemaValue).length === 0) {
     // array any. ex) blank=True list
-    return faker.word.words({
-      count: {
-        min: MIN_WORD_LENGTH,
-        max: MAX_WORD_LENGTH,
-      },
-    })
+    return isStatic
+      ? faker.word.words({
+          count: {
+            min: MIN_WORD_LENGTH,
+            max: MAX_WORD_LENGTH,
+          },
+        })
+      : multiLineStr(`
+          faker.word.words({
+            count: {
+              min: ${MIN_WORD_LENGTH},
+              max: ${MAX_WORD_LENGTH},
+            },
+          })
+        `)
   }
 
-  return faker.word.adjective()
+  return isStatic ? faker.word.adjective() : "faker.word.adjective()"
 }
 
 export const getRandomLengthArray = (
