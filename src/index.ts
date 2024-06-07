@@ -1,4 +1,3 @@
-import { defaultOptions } from "./defaults"
 import { generateAPI, generateSchema } from "./generate"
 import { Options } from "./types"
 import { writeHandlers, writeResponses, writeSchema } from "./writer"
@@ -19,14 +18,3 @@ export const main = async (options: Options) => {
   writeResponses(generatedAPI, options)
   writeSchema(generatedSchema, options)
 }
-
-// sample code
-// const options: Options = {
-//   ...defaultOptions,
-//   path: "openapi.json", // file path or url
-//   static: true,
-//   baseDir: "resources",
-//   specialPath: "special",
-//   // includeCodes: [200, 201, 202, 204],
-// }
-// main(options)
