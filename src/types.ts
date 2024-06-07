@@ -11,6 +11,7 @@ export type Options = {
   handlerUrl: string
   fakerLocale: string
   generateTarget: string
+  clear?: boolean
 }
 
 export type SchemaOutputType = string | number | boolean | null | undefined | Date

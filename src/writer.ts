@@ -2,7 +2,7 @@ import { getRandomLengthArray, parseSchema, refSchemaParser, specialFakerParser 
 import { Options, ParseSchemaType, PathNormalizedType, SchemaOutputType } from "./types"
 import SwaggerParser from "@apidevtools/swagger-parser"
 import { camelCase, pascalCase } from "change-case-all"
-import { existsSync, mkdirSync, writeFileSync } from "fs"
+import { existsSync, mkdirSync, writeFileSync, rmSync, readdirSync } from "fs"
 import { isReference } from "oazapfts/generate"
 import * as path from "path"
 import { GEN_COMMENT } from "./defaults"
@@ -86,6 +86,11 @@ export const writeHandlers = (paths: PathNormalizedType[], options: Options) => 
     const directory = path.join(options.baseDir ?? "", "handlers")
     if (!existsSync(directory)) {
       mkdirSync(directory, { recursive: true })
+    } else if (options.clear) {
+      // clear directory
+      readdirSync(directory).forEach((file) => {
+        rmSync(path.join(directory, file))
+      })
     }
     const fileName = path.join(directory, `${tag}.ts`)
     writeFileSync(fileName, GEN_COMMENT + mockHandlers)
@@ -205,6 +210,11 @@ export const writeResponses = async (paths: PathNormalizedType[], options: Optio
   const directory = path.join(options.baseDir ?? "", "response")
   if (!existsSync(directory)) {
     mkdirSync(directory, { recursive: true })
+  } else if (options.clear) {
+    // clear directory
+    readdirSync(directory).forEach((file) => {
+      rmSync(path.join(directory, file))
+    })
   }
 
   Object.entries(codeBasePerTag).forEach(([tag, responses]) => {

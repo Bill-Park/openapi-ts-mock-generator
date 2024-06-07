@@ -39,6 +39,9 @@ cli
   .option("-t, --generate-target <targets>", "Comma separated list of targets to generate.", {
     default: "api,schema",
   })
+  .option("--clear", "Clear response and handlers directory before generate files.", {
+    default: false,
+  })
   .example("openapi-ts-mock-generator ./openapi.json")
   .example("openapi-ts-mock-generator http://127.0.0.1/openapi.json")
   .action(async (path, userOptions) => {
