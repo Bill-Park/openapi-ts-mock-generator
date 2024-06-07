@@ -15,7 +15,7 @@ cli
     "Comma separated list of status codes to generate responses for.",
     {
       default: undefined,
-    },
+    }
   )
   .option("-m, --array-min-length <length>", "Minimum array length.", {
     default: "1",

@@ -14,7 +14,7 @@ export const writeHandlers = (paths: PathNormalizedType[], options: Options) => 
       acc[tag] = []
       return acc
     },
-    {} as Record<string, string[]>,
+    {} as Record<string, string[]>
   )
 
   paths.forEach((path) => {
@@ -42,7 +42,7 @@ export const writeHandlers = (paths: PathNormalizedType[], options: Options) => 
         const schemaComment = schemaName ? ` // Schema is ${schemaName}` : ""
         const outputResName = `get${pascalCase(path.operationId)}${res.statusCode}`
         codeBaseArray.push(
-          `      [${outputResName}(), { status: ${res.statusCode} }],${schemaComment}`,
+          `      [${outputResName}(), { status: ${res.statusCode} }],${schemaComment}`
         )
         return outputResName
       })
@@ -132,7 +132,7 @@ export const writeResponses = async (paths: PathNormalizedType[], options: Optio
       acc[tag] = []
       return acc
     },
-    {} as Record<string, string[]>,
+    {} as Record<string, string[]>
   )
   const specialFakers = specialFakerParser(options)
   paths.forEach((path) => {
@@ -145,26 +145,35 @@ export const writeResponses = async (paths: PathNormalizedType[], options: Optio
         const outputSchema = parseSchema(value, specialFakers, options.static)
         codeBaseArray.push(`  // Schema is ${name}`)
         codeBaseArray.push(
-          `  return ${toUnquotedJSON(outputSchema, { depth: 1, isStatic: options.static })}`,
+          `  return ${toUnquotedJSON(outputSchema, {
+            depth: 1,
+            isStatic: options.static,
+          })}`
         )
       } else if (res.schema?.type === "array") {
         if (isReference(res.schema.value)) {
           const { name, value } = refSchemaParser(res.schema.value.$ref, refs)
           const outputSchema = getRandomLengthArray(
             options.arrayMinLength,
-            options.arrayMaxLength,
+            options.arrayMaxLength
           ).map(() => parseSchema(value, specialFakers, options.static))
           codeBaseArray.push(`  // Schema is ${name} array`)
           codeBaseArray.push(
-            `  return ${toUnquotedJSON(outputSchema, { depth: 1, isStatic: options.static })}`,
+            `  return ${toUnquotedJSON(outputSchema, {
+              depth: 1,
+              isStatic: options.static,
+            })}`
           )
         } else {
           const outputSchema = getRandomLengthArray(
             options.arrayMinLength,
-            options.arrayMaxLength,
+            options.arrayMaxLength
           ).map(() => res.schema && parseSchema(res.schema.value, specialFakers, options.static))
           codeBaseArray.push(
-            `  return ${toUnquotedJSON(outputSchema, { depth: 1, isStatic: options.static })}`,
+            `  return ${toUnquotedJSON(outputSchema, {
+              depth: 1,
+              isStatic: options.static,
+            })}`
           )
         }
       } else if (res.schema?.type === "anyOf") {
@@ -174,7 +183,10 @@ export const writeResponses = async (paths: PathNormalizedType[], options: Optio
           const outputSchema = parseSchema(value, specialFakers, options.static)
           codeBaseArray.push(`  // Schema is ${name}`)
           codeBaseArray.push(
-            `  return ${toUnquotedJSON(outputSchema, { depth: 1, isStatic: options.static })}`,
+            `  return ${toUnquotedJSON(outputSchema, {
+              depth: 1,
+              isStatic: options.static,
+            })}`
           )
         } else {
           codeBaseArray.push(`  return ${res.schema.value}`)
@@ -244,7 +256,7 @@ export const toUnquotedJSON = (
     depth?: number
     isStatic?: boolean
     singleLine?: boolean
-  },
+  }
 ): string => {
   const { depth, isStatic, singleLine } = {
     depth: 0,
@@ -268,7 +280,10 @@ export const toUnquotedJSON = (
     const results = Object.entries(param)
       .map(
         ([key, value]) =>
-          `${firstElementSpace}${key}: ${toUnquotedJSON(value, { ...options, depth: depth + 1 })}${lastComma}`,
+          `${firstElementSpace}${key}: ${toUnquotedJSON(value, {
+            ...options,
+            depth: depth + 1,
+          })}${lastComma}`
       )
       .join(lineBreak + prefixSpace)
     return ["{", `${results}`, "}"].join(lineBreak + prefixSpace)

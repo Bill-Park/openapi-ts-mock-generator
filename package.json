@@ -5,7 +5,7 @@
   "scripts": {
     "build": "tsup ./src",
     "test": "vitest run",
-    "pretty": "npx prettier . --write --tab-width 2 --print-width 100 --no-semi --single-quote false"
+    "pretty": "npx prettier **/*.ts --write --tab-width 2 --print-width 100 --no-semi --single-quote false --trailing-comma es5"
   },
   "repository": {
     "type": "git",

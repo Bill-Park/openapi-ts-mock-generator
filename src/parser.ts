@@ -24,7 +24,7 @@ export const parseSchema = (
   schemaValue: OpenAPIV3_1.ReferenceObject | OpenAPIV3_1.SchemaObject,
   specialSchema: ReturnType<typeof specialFakerParser>,
   isStatic: boolean,
-  outputSchema: ParseSchemaType = {},
+  outputSchema: ParseSchemaType = {}
 ): ParseSchemaType => {
   if (isReference(schemaValue)) {
     console.warn("can't parse reference schema", schemaValue, schemaValue.$ref)
@@ -38,7 +38,7 @@ export const parseSchema = (
         acc[key] = parseSchema(field, specialSchema, isStatic, outputSchema) as SchemaOutputType
         return acc
       },
-      {} as Record<string, SchemaOutputType>,
+      {} as Record<string, SchemaOutputType>
     )
   } else if (schemaValue.enum !== undefined) {
     // enum value
@@ -57,7 +57,7 @@ export const parseSchema = (
     return faker.helpers.arrayElement(
       allOfValue.map((field) => {
         return parseSchema(field, specialSchema, isStatic, outputSchema)
-      }),
+      })
     )
   } else if (schemaValue.anyOf !== undefined) {
     // anyOf value, select one or more. ex) string or null
@@ -103,7 +103,7 @@ export const parseSchema = (
     // array
     const arrayValue = schemaValue.items
     return getRandomLengthArray().map(() =>
-      parseSchema(arrayValue, specialSchema, isStatic, outputSchema),
+      parseSchema(arrayValue, specialSchema, isStatic, outputSchema)
     ) as (SchemaOutputType | Record<string, SchemaOutputType>)[]
   }
   return valueGenerator(schemaValue, specialSchema, isStatic)
@@ -122,7 +122,7 @@ const uuidToB64 = (uuid: string) => {
 const valueGenerator = (
   schemaValue: OpenAPIV3_1.SchemaObject,
   specialSchema: ReturnType<typeof specialFakerParser>,
-  isStatic: boolean,
+  isStatic: boolean
 ): ParseSchemaType => {
   // if title or description in special keys
   // return special faker data
@@ -250,7 +250,7 @@ const valueGenerator = (
 
 export const getRandomLengthArray = (
   min: number = ARRAY_MIN_LENGTH,
-  max: number = ARRAY_MAX_LENGTH,
+  max: number = ARRAY_MAX_LENGTH
 ) => {
   const length = faker.number.int({
     min,
@@ -322,7 +322,7 @@ export const specialFakerParser = (options: Options) => {
       acc[key] = fakerValue
       return acc
     },
-    {} as Record<string, SchemaOutputType>,
+    {} as Record<string, SchemaOutputType>
   )
 
   const descriptionSpecial = Object.entries(descriptionSpecialKey).reduce(
@@ -333,7 +333,7 @@ export const specialFakerParser = (options: Options) => {
       acc[key] = fakerValue
       return acc
     },
-    {} as Record<string, SchemaOutputType>,
+    {} as Record<string, SchemaOutputType>
   )
 
   return { titleSpecial, descriptionSpecial }
