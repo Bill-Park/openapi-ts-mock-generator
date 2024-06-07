@@ -37,6 +37,7 @@
   "dependencies": {
     "@apidevtools/swagger-parser": "^10.1.0",
     "@faker-js/faker": "^8.4.1",
+    "change-case-all": "^2.1.0",
     "oazapfts": "^6.0.4"
   }
 }
