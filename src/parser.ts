@@ -74,9 +74,6 @@ export const parseSchema = (
     return getRandomLengthArray().map(() =>
       parseSchema(arrayValue, specialSchema, isStatic, outputSchema)
     ) as (SchemaOutputType | Record<string, SchemaOutputType>)[]
-  } else if (schemaValue.type === "string" && schemaValue.pattern) {
-    // regex pattern string
-    return "pattern string"
   }
   return valueGenerator(schemaValue, specialSchema, isStatic)
 }
@@ -122,6 +119,8 @@ const valueGenerator = (
       })
       .toISOString()
       .split("T")[0]
+  } else if (schemaValue.type === "string" && schemaValue.pattern) {
+    return faker.helpers.fromRegExp(schemaValue.pattern)
   } else if (schemaValue.type === "string" && schemaValue.title?.toLowerCase() === "b64uuid") {
     // generate base 64 uuid
     const baseUuid = faker.string.uuid()
