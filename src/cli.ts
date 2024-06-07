@@ -14,7 +14,7 @@ cli
     "-c, --include-codes <codes>",
     "Comma separated list of status codes to generate responses for.",
     {
-      default: "",
+      default: undefined,
     }
   )
   .option("-m, --array-min-length <length>", "Minimum array length.", {
@@ -23,17 +23,17 @@ cli
   .option("-M, --array-max-length <length>", "Maximum array length.", {
     default: "3",
   })
-  .option("-s, --static", "Generate static mocks.", {
-    default: false,
-  })
-  .option("-sp, --special-path", "Generate special faker functions.", {
+  .option("-sp, --special-path <specialPath>", "Generate special faker functions.", {
     default: undefined,
   })
-  .option("--handler-url", "URL for the generated handlers", {
+  .option("--handler-url <handlerUrl>", "URL for the generated handlers", {
     default: "*",
   })
   .option("-l, --locales <locales>", "Comma separated list of locales for faker.", {
     default: "ko",
+  })
+  .option("-s, --static", "Generate static mocks.", {
+    default: false,
   })
   .example("openapi-ts-mock-generator ./openapi.json")
   .example("openapi-ts-mock-generator http://127.0.0.1/openapi.json")
@@ -48,7 +48,10 @@ cli
       handlerUrl: userOptions.handlerUrl,
       fakerLocale: userOptions.locales,
       includeCodes: userOptions.includeCodes
-        ? userOptions.includeCodes.split(",").map((code: string) => parseInt(code))
+        ? userOptions.includeCodes
+            .toString()
+            .split(",")
+            .map((code: string) => parseInt(code))
         : undefined,
     }
     await main(options)

@@ -27,6 +27,7 @@ npx openapi-ts-mock-generator openapi.json
 - **-M, --array-max-length**: maximum length of array.
 - **-sp, --special-path**: special path for custom mock data.
 - **-l, --locales**: locales for faker data. look at [faker.js Localization](https://fakerjs.dev/guide/localization.html#available-locales) use Locale value. ex) ko
+- **-s, --static** : generate static mock data.
 
 ## Special Keys
 
