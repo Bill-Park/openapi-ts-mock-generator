@@ -124,7 +124,7 @@ const valueGenerator = (
             to: "2030-12-31T23:59:59.999Z",
           })
           .toISOString()
-          `)
+        `)
   } else if (schemaValue.type === "string" && schemaValue.format === "date") {
     // date, 2017-07-21
     return isStatic
