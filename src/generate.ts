@@ -111,7 +111,7 @@ export const generateAPI = async (options: Options) => {
           .filter(isNotNullish)
 
         return {
-          pathname: apiName,
+          pathname: apiName.replace(/{/g, ":").replace(/}/g, ""),
           operationId: api[method]?.operationId ?? "",
           summary: api[method]?.summary ?? "",
           tags: api[method]?.tags ?? ["default"],
