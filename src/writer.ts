@@ -203,6 +203,24 @@ export const writeSchema = (schemas: Record<string, SchemaOutputType>, options: 
   console.log(`Generated schema ${outputFileName}`)
 }
 
+export const writeFaker = (options: Options) => {
+  const directory = path.join(options.baseDir ?? "")
+  if (!existsSync(directory)) {
+    mkdirSync(directory, { recursive: true })
+  }
+
+  const fakerImport = `import { Faker, ${options.fakerLocale} } from "@faker-js/faker"\n\n`
+  const fakerDeclare = [
+    "export const faker = new Faker({",
+    `  locale: [${options.fakerLocale}]`,
+    "})",
+  ].join("\n")
+
+  const outputFileName = path.join(`${options.baseDir}`, "fakers.ts")
+  writeFileSync(outputFileName, fakerImport + fakerDeclare)
+  console.log(`Generated fakers ${outputFileName}`)
+}
+
 export const toUnquotedJSON = (
   param: ParseSchemaType,
   depth = 0,
