@@ -207,7 +207,9 @@ export const writeResponses = async (paths: PathNormalizedType[], options: Optio
   }
 
   Object.entries(codeBasePerTag).forEach(([tag, responses]) => {
-    const importFaker = options.isStatic ? "" : 'import { faker } from "../fakers"\n\n'
+    const needImportFaker = responses.some((res) => res.includes("faker."))
+    const importFaker =
+      options.isStatic || !needImportFaker ? "" : 'import { faker } from "../fakers"\n\n'
 
     const fileName = `${directory}/${tag}.ts`
     writeFileSync(fileName, importFaker + responses.join("\n\n"))
