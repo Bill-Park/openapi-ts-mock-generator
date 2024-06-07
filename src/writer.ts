@@ -213,6 +213,21 @@ export const writeResponses = async (paths: PathNormalizedType[], options: Optio
     writeFileSync(fileName, importFaker + responses.join("\n\n"))
     console.log(`Generated ${fileName}`)
   })
+
+  // make index.ts for merge all responses
+  const importResponses = Object.entries(codeBasePerTag).map(([tag, responses]) => {
+    const responseNames = responses
+      .reduce((acc, handler) => {
+        const matched = handler.match(/get[A-Z]\w+/g)
+        if (matched === null) return acc
+        return [...acc, ...matched]
+      }, [] as string[])
+      .join(",\n  ")
+    return ["export {", "  " + responseNames, '} from "./' + tag + '"'].join("\n")
+  })
+  const fileName = `${directory}/index.ts`
+  writeFileSync(fileName, importResponses.join("\n"))
+  console.log(`Generated ${fileName}`)
 }
 
 export const writeSchema = (schemas: Record<string, SchemaOutputType>, options: Options) => {
