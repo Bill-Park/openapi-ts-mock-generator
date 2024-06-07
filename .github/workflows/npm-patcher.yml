@@ -24,24 +24,27 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "16" # specify your node version
+          node-version: "20" # specify your node version
 
       - name: Install dependencies
         run: npm install
 
-      - name: Bump version
-        id: bump_version
-        run: npm version ${{ github.event.inputs.version }}
-
-      - name: Push changes
-        if: success()
+      - name: Set git config
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git push --follow-tags
+
+      - name: Bump version
+        id: bump_version
+        run: npm version ${{ github.event.inputs.version }}
 
       - name: Publish package
         if: success()
         run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+
+      - name: push changes
+        if: success()
+        run: |
+          git push --follow-tags
