@@ -28,6 +28,7 @@ faker.seed(FAKER_SEED)
 export const parseSchema = (
   schemaValue: OpenAPIV3_1.ReferenceObject | OpenAPIV3_1.SchemaObject,
   specialSchema: ReturnType<typeof specialFakerParser>,
+  isStatic: boolean,
   outputSchema: ParseSchemaType = {}
 ): ParseSchemaType => {
   if (isReference(schemaValue)) {
@@ -39,7 +40,7 @@ export const parseSchema = (
     if (schemaValue.properties === undefined) return {}
     return Object.entries(schemaValue.properties).reduce(
       (acc, [key, field]) => {
-        acc[key] = parseSchema(field, specialSchema, outputSchema) as SchemaOutputType
+        acc[key] = parseSchema(field, specialSchema, isStatic, outputSchema) as SchemaOutputType
         return acc
       },
       {} as Record<string, SchemaOutputType>
@@ -54,7 +55,7 @@ export const parseSchema = (
     const allOfValue = schemaValue.allOf
     return faker.helpers.arrayElement(
       allOfValue.map((field) => {
-        return parseSchema(field, specialSchema, outputSchema)
+        return parseSchema(field, specialSchema, isStatic, outputSchema)
       })
     )
   } else if (schemaValue.anyOf !== undefined) {
@@ -62,7 +63,7 @@ export const parseSchema = (
     const anyOfValue = schemaValue.anyOf
     return faker.helpers.arrayElement(
       anyOfValue.map((field) => {
-        return parseSchema(field, specialSchema, outputSchema)
+        return parseSchema(field, specialSchema, isStatic, outputSchema)
       })
     )
   } else if (schemaValue.oneOf !== undefined) {
@@ -70,20 +71,20 @@ export const parseSchema = (
     const oneOfValue = schemaValue.oneOf
     return faker.helpers.arrayElement(
       oneOfValue.map((field) => {
-        return parseSchema(field, specialSchema, outputSchema)
+        return parseSchema(field, specialSchema, isStatic, outputSchema)
       })
     )
   } else if (schemaValue.type === "array") {
     // array
     const arrayValue = schemaValue.items
     return getRandomLengthArray().map(() =>
-      parseSchema(arrayValue, specialSchema, outputSchema)
+      parseSchema(arrayValue, specialSchema, isStatic, outputSchema)
     ) as (SchemaOutputType | Record<string, SchemaOutputType>)[]
   } else if (schemaValue.type === "string" && schemaValue.pattern) {
     // regex pattern string
     return "pattern string"
   }
-  return valueGenerator(schemaValue, specialSchema)
+  return valueGenerator(schemaValue, specialSchema, isStatic)
 }
 
 const uuidToB64 = (uuid: string) => {
@@ -98,7 +99,8 @@ const uuidToB64 = (uuid: string) => {
 
 const valueGenerator = (
   schemaValue: OpenAPIV3_1.SchemaObject,
-  specialSchema: ReturnType<typeof specialFakerParser>
+  specialSchema: ReturnType<typeof specialFakerParser>,
+  isStatic: boolean
 ): ParseSchemaType => {
   // if title or description in special keys
   // return special faker data

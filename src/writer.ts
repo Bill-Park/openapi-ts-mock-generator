@@ -143,18 +143,20 @@ export const writeResponses = async (paths: PathNormalizedType[], options: Optio
       ]
       if (res.schema?.type === "ref") {
         const { name, value } = refSchemaParser(res.schema.value.$ref, refs)
-        const outputSchema = parseSchema(value, specialFakers)
+        const outputSchema = parseSchema(value, specialFakers, options.static)
         codeBaseArray.push(`  // Schema is ${name}`)
         codeBaseArray.push(`  return ${toUnquotedJSON(outputSchema)}`)
       } else if (res.schema?.type === "array") {
         if (isReference(res.schema.value)) {
           const { name, value } = refSchemaParser(res.schema.value.$ref, refs)
-          const outputSchema = getRandomLengthArray().map(() => parseSchema(value, specialFakers))
+          const outputSchema = getRandomLengthArray().map(() =>
+            parseSchema(value, specialFakers, options.static)
+          )
           codeBaseArray.push(`  // Schema is ${name} array`)
           codeBaseArray.push(`  return ${toUnquotedJSON(outputSchema)}`)
         } else {
           const outputSchema = getRandomLengthArray().map(
-            () => res.schema && parseSchema(res.schema.value, specialFakers)
+            () => res.schema && parseSchema(res.schema.value, specialFakers, options.static)
           )
           codeBaseArray.push(`  return ${toUnquotedJSON(outputSchema)}`)
         }
@@ -162,7 +164,7 @@ export const writeResponses = async (paths: PathNormalizedType[], options: Optio
         const firstSchema = res.schema.value.anyOf?.[0]
         if (isReference(firstSchema)) {
           const { name, value } = refSchemaParser(firstSchema.$ref, refs)
-          const outputSchema = parseSchema(value, specialFakers)
+          const outputSchema = parseSchema(value, specialFakers, options.static)
           codeBaseArray.push(`  // Schema is ${name}`)
           codeBaseArray.push(`  return ${toUnquotedJSON(outputSchema)}`)
         } else {
