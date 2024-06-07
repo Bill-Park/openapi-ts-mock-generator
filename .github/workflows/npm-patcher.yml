@@ -42,13 +42,9 @@ jobs:
         id: bump_version
         run: npm version ${{ github.event.inputs.version }}
 
-      - name: Publish package
-        if: success()
-        run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
-
-      - name: push changes
+      - name: make Pull Request
         if: success()
         run: |
-          git push --follow-tags
+          git checkout -b release-${{ steps.bump_version.outputs.version }}
+          git push --set-upstream origin release-${{ steps.bump_version.outputs.version }}
+          gh pr create --title "Release ${{ steps.bump_version.outputs.version }}" --body "Release ${{ steps.bump_version.outputs.version }}" --base main --head release-${{ steps.bump_version.outputs.version }} --label "version bump"
