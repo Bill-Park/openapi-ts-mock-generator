@@ -62,19 +62,43 @@ export const parseSchema = (
   } else if (schemaValue.anyOf !== undefined) {
     // anyOf value, select one or more. ex) string or null
     const anyOfValue = schemaValue.anyOf
-    return faker.helpers.arrayElement(
-      anyOfValue.map((field) => {
-        return parseSchema(field, specialSchema, isStatic, outputSchema)
-      }),
-    )
+    return isStatic
+      ? faker.helpers.arrayElement(
+          anyOfValue.map((field) => {
+            return parseSchema(field, specialSchema, isStatic, outputSchema)
+          })
+        )
+      : multiLineStr(`
+          faker.helpers.arrayElement([
+            ${anyOfValue.map((field) =>
+              toUnquotedJSON(parseSchema(field, specialSchema, isStatic, {}), {
+                depth: 0,
+                isStatic,
+                singleLine: true,
+              })
+            )}
+          ])
+        `)
   } else if (schemaValue.oneOf !== undefined) {
     // oneOf value, exactly one. Can't find example
     const oneOfValue = schemaValue.oneOf
-    return faker.helpers.arrayElement(
-      oneOfValue.map((field) => {
-        return parseSchema(field, specialSchema, isStatic, outputSchema)
-      }),
-    )
+    return isStatic
+      ? faker.helpers.arrayElement(
+          oneOfValue.map((field) => {
+            return parseSchema(field, specialSchema, isStatic, outputSchema)
+          })
+        )
+      : multiLineStr(`
+          faker.helpers.arrayElement([
+            ${oneOfValue.map((field) =>
+              toUnquotedJSON(parseSchema(field, specialSchema, isStatic, {}), {
+                depth: 0,
+                isStatic,
+                singleLine: true,
+              })
+            )}
+          ])
+        `)
   } else if (schemaValue.type === "array") {
     // array
     const arrayValue = schemaValue.items
