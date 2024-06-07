@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "mock data generator based openapi",
   "scripts": {
-    "build": "tsup",
+    "build": "tsup ./src",
     "test": "vitest run"
   },
   "repository": {
@@ -22,6 +22,7 @@
   },
   "homepage": "https://github.com/Bill-Park/openapi-mock-generator#readme",
   "devDependencies": {
+    "@swc/core": "^1.4.17",
     "@trivago/prettier-plugin-sort-imports": "^4.3.0",
     "prettier": "^3.2.5",
     "ts-node": "^10.9.2",
@@ -33,8 +34,16 @@
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "package.json"
   ],
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
   "dependencies": {
     "@apidevtools/swagger-parser": "^10.1.0",
     "@faker-js/faker": "^8.4.1",
