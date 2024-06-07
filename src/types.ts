@@ -1,9 +1,12 @@
+import { OpenAPIV3_1 } from "openapi-types"
+
 export type Options = {
   path: string
   output: string
   arrayMinLength?: number
   arrayMaxLength?: number
   static?: boolean
+  includeCodes?: number[]
 }
 
 export type SchemaOutputType = string | number | boolean | null | undefined | Date
@@ -12,3 +15,42 @@ export type ParseSchemaType =
   | SchemaOutputType
   | Record<string, SchemaOutputType>
   | (SchemaOutputType | Record<string, SchemaOutputType>)[]
+
+export enum HttpMethods {
+  GET = "get",
+  PUT = "put",
+  POST = "post",
+  DELETE = "delete",
+  OPTIONS = "options",
+  HEAD = "head",
+  PATCH = "patch",
+  TRACE = "trace",
+}
+
+export type ResponseSchemaType =
+  | {
+      type: "anyOf" | "oneOf" | "array"
+      value: OpenAPIV3_1.SchemaObject
+    }
+  | {
+      type: "ref"
+      value: OpenAPIV3_1.ReferenceObject
+    }
+  | undefined
+
+export type PathNormalizedType = {
+  pathname: string
+  operationId: string
+  summary: string
+  method: HttpMethods
+  responses: {
+    statusCode: number
+    description: string
+    schema: ResponseSchemaType
+  }[]
+  tags: string[]
+}
+
+export const isNotNullish = <TValue>(value: TValue | null | undefined): value is TValue => {
+  return value !== null && value !== undefined
+}
