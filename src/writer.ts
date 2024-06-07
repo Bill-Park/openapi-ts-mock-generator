@@ -60,9 +60,25 @@ export const writeHandlers = async (paths: PathNormalizedType[], options: Option
   })
 
   Object.entries(handlersPerTag).forEach(async ([tag, handlers]) => {
-    // Todo: need to import http and responses
+    const importMSW = `import { http, HttpResponse } from 'msw'\n`
+    const responseNames = handlers
+      .reduce((acc, handler) => {
+        const matched = handler.match(/get[A-Z]\w+/g)
+        if (matched === null) return acc
+        return [...acc, ...matched]
+      }, [] as string[])
+      .join(", ")
+    const importResponses = `import { ${responseNames} } from "../response/${tag}"\n`
+
     const handlerName = camelCase(tag)
-    const mockHandlers = `const ${handlerName}Handlers = [${handlers.join("\n\n")}]`
+    const mockHandlers = [
+      `${importMSW}`,
+      `${importResponses}`,
+      ``,
+      `const ${handlerName}Handlers = [`,
+      `  ${handlers.join("\n\n")}`,
+      `]`,
+    ].join("\n")
     const directory = `${options.baseDir}/handlers`
     if (!existsSync(directory)) {
       mkdirSync(directory)
