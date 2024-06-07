@@ -254,7 +254,7 @@ export const toUnquotedJSON = (
     return param // dynamic mode, start with faker or Buffer.from(faker)
   } else if (typeof param === "string" && param.endsWith(" as const")) {
     // split " as const" from string
-    return `"${param.replace(/(\w+)(\ as\ const)?$/, "$1")}" as const`
+    return `"${param.slice(0, -" as const".length)}" as const`
   }
   return JSON.stringify(param)
 }
