@@ -9,48 +9,73 @@ import { OpenAPIV3_1 } from "openapi-types"
 import * as prettier from "prettier"
 
 export const writeApi = async (paths: PathNormalizedType[], options: Options) => {
-  const mockHandlers = paths
-    .map((path) => {
-      const codeBaseArray = [`http.${path.method}('\${baseURL}${path.pathname}', () => {`]
-      if (path.responses.length === 1) {
-        // single response
-        const res = path.responses[0]
-        if (res.schema?.type === "ref") {
-          const schemaName = camelCase(res.schema.value.$ref.replace("#/components/schemas/", ""))
-          codeBaseArray.push(`  // Schema is ${schemaName}`)
-        }
-        const outputResName = `get${pascalCase(path.operationId)}${res.statusCode}`
-        codeBaseArray.push(`  return HttpResponse.json(${outputResName}(), {`)
-        codeBaseArray.push(`    status: ${res.statusCode},`)
-        codeBaseArray.push(`  })`)
-      } else if (path.responses.length > 1) {
-        // multiple responses
-        // random select response
-        codeBaseArray.push(`  const responses = [`)
-        const responses = path.responses.map((res) => {
-          const schemaName =
-            res.schema?.type === "ref"
-              ? camelCase(res.schema.value.$ref.replace("#/components/schemas/", ""))
-              : ""
-          const schemaComment = schemaName ? `  // Schema is ${schemaName}` : ""
-          const outputResName = `get${pascalCase(path.operationId)}${res.statusCode}`
-          codeBaseArray.push(`    [${outputResName}(), ${res.statusCode}],${schemaComment}`)
-          return outputResName
-        })
-        codeBaseArray.push(`  ]`)
-        codeBaseArray.push(`  const randomIndex = Math.floor(Math.random() * responses.length)`)
-        codeBaseArray.push(`  const response = responses[randomIndex]`)
-        codeBaseArray.push(`  return HttpResponse.json(response[0], {`)
-        codeBaseArray.push(`    status: response[1],`)
-        codeBaseArray.push(`  })`)
-      } else {
-        // empty responses
-        codeBaseArray.push(`  return HttpResponse.json()`)
-      }
+  const firstTags = Array.from(new Set(paths.map((path) => path.tags[0])))
+  // create records with tag as key
+  const apisPerTag = firstTags.reduce(
+    (acc, tag) => {
+      acc[tag] = []
+      return acc
+    },
+    {} as Record<string, string[]>
+  )
 
-      return [...codeBaseArray, `})`].join("\n")
+  paths.forEach((path) => {
+    const codeBaseArray = [`http.${path.method}('\${baseURL}${path.pathname}', () => {`]
+    if (path.responses.length === 1) {
+      // single response
+      const res = path.responses[0]
+      if (res.schema?.type === "ref") {
+        const schemaName = camelCase(res.schema.value.$ref.replace("#/components/schemas/", ""))
+        codeBaseArray.push(`  // Schema is ${schemaName}`)
+      }
+      const outputResName = `get${pascalCase(path.operationId)}${res.statusCode}`
+      codeBaseArray.push(`  return HttpResponse.json(${outputResName}(), {`)
+      codeBaseArray.push(`    status: ${res.statusCode},`)
+      codeBaseArray.push(`  })`)
+    } else if (path.responses.length > 1) {
+      // multiple responses
+      // random select response
+      codeBaseArray.push(`  const responses = [`)
+      path.responses.forEach((res) => {
+        const schemaName =
+          res.schema?.type === "ref"
+            ? camelCase(res.schema.value.$ref.replace("#/components/schemas/", ""))
+            : ""
+        const schemaComment = schemaName ? `  // Schema is ${schemaName}` : ""
+        const outputResName = `get${pascalCase(path.operationId)}${res.statusCode}`
+        codeBaseArray.push(`    [${outputResName}(), ${res.statusCode}],${schemaComment}`)
+        return outputResName
+      })
+      codeBaseArray.push(`  ]`)
+      codeBaseArray.push(`  const randomIndex = Math.floor(Math.random() * responses.length)`)
+      codeBaseArray.push(`  const response = responses[randomIndex]`)
+      codeBaseArray.push(`  return HttpResponse.json(response[0], {`)
+      codeBaseArray.push(`    status: response[1],`)
+      codeBaseArray.push(`  })`)
+    } else {
+      // empty responses
+      codeBaseArray.push(`  return HttpResponse.json()`)
+    }
+    const pathApi = [...codeBaseArray, `}),`].join("\n")
+    apisPerTag[path.tags[0]].push(pathApi)
+  })
+
+  Object.entries(apisPerTag).forEach(async ([tag, apis]) => {
+    // Todo: need to import http and responses
+    const handlerName = camelCase(tag)
+    const mockHandlers = `const ${handlerName}Handlers = [${apis.join("\n\n")}]`
+    const directory = `${options.baseDir}/handlers`
+    if (!existsSync(directory)) {
+      mkdirSync(directory)
+    }
+    const fileName = `${directory}/${tag}.ts`
+    const formattedContent = await prettier.format(mockHandlers, {
+      parser: "typescript",
     })
-    .join("\n\n")
+    await writeFile(fileName, formattedContent)
+    console.log(`Generated API ${fileName}`)
+  })
+}
 
 export const writeResponse = async (paths: PathNormalizedType[], options: Options) => {
   const parser = new SwaggerParser()
