@@ -2,12 +2,11 @@ import { getRandomLengthArray, parseSchema, refSchemaParser, specialFakerParser 
 import { Options, ParseSchemaType, PathNormalizedType, SchemaOutputType } from "./types"
 import SwaggerParser from "@apidevtools/swagger-parser"
 import { camelCase, pascalCase } from "change-case-all"
-import { existsSync, mkdirSync } from "fs"
-import { writeFile } from "fs/promises"
+import { existsSync, mkdirSync, writeFileSync } from "fs"
 import { isReference } from "oazapfts/generate"
 import * as path from "path"
 
-export const writeHandlers = async (paths: PathNormalizedType[], options: Options) => {
+export const writeHandlers = (paths: PathNormalizedType[], options: Options) => {
   const firstTags = Array.from(new Set(paths.map((path) => path.tags[0])))
   // create records with tag as key
   const handlersPerTag = firstTags.reduce(
@@ -59,7 +58,7 @@ export const writeHandlers = async (paths: PathNormalizedType[], options: Option
     handlersPerTag[path.tags[0]].push(handler)
   })
 
-  Object.entries(handlersPerTag).forEach(async ([tag, handlers]) => {
+  Object.entries(handlersPerTag).forEach(([tag, handlers]) => {
     const importMSW = `import { http, HttpResponse } from 'msw'`
     const responseNames = handlers
       .reduce((acc, handler) => {
@@ -85,10 +84,10 @@ export const writeHandlers = async (paths: PathNormalizedType[], options: Option
     ].join("\n")
     const directory = path.join(options.baseDir ?? "", "handlers")
     if (!existsSync(directory)) {
-      mkdirSync(directory)
+      mkdirSync(directory, { recursive: true })
     }
     const fileName = path.join(directory, `${tag}.ts`)
-    await writeFile(fileName, mockHandlers)
+    writeFileSync(fileName, mockHandlers)
     console.log(`Generated Handler ${fileName}`)
   })
 
@@ -114,7 +113,7 @@ export const writeHandlers = async (paths: PathNormalizedType[], options: Option
     `]`,
   ].join("\n")
   const fileName = path.join(options.baseDir ?? "", "mockHandlers.ts")
-  await writeFile(fileName, mockHandlers)
+  writeFileSync(fileName, mockHandlers)
   console.log(`Generated mock handlers ${fileName}`)
 }
 
@@ -185,14 +184,14 @@ export const writeResponses = async (paths: PathNormalizedType[], options: Optio
     mkdirSync(directory, { recursive: true })
   }
 
-  Object.entries(codeBasePerTag).forEach(async ([tag, responses]) => {
+  Object.entries(codeBasePerTag).forEach(([tag, responses]) => {
     const fileName = `${directory}/${tag}.ts`
-    await writeFile(fileName, responses.join("\n\n"))
+    writeFileSync(fileName, responses.join("\n\n"))
     console.log(`Generated ${fileName}`)
   })
 }
 
-export const writeSchema = async (schemas: Record<string, SchemaOutputType>, options: Options) => {
+export const writeSchema = (schemas: Record<string, SchemaOutputType>, options: Options) => {
   // key is schema name, value is generated schema value
   const generatedVars = Object.entries(schemas)
     .map(([varName, varValue]) => {
@@ -200,7 +199,7 @@ export const writeSchema = async (schemas: Record<string, SchemaOutputType>, opt
     })
     .join("\n\n")
   const outputFileName = path.join(`${options.baseDir}`, "schemas.ts")
-  await writeFile(outputFileName, generatedVars)
+  writeFileSync(outputFileName, generatedVars)
   console.log(`Generated schema ${outputFileName}`)
 }
 
