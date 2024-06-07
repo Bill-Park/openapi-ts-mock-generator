@@ -23,7 +23,7 @@ faker.seed(FAKER_SEED)
 
 export const parseSchema = (
   schemaValue: OpenAPIV3_1.ReferenceObject | OpenAPIV3_1.SchemaObject,
-  outputSchema: ParseSchemaType
+  outputSchema: ParseSchemaType = {} as ParseSchemaType
 ): ParseSchemaType => {
   if (isReference(schemaValue)) {
     console.warn("can't parse reference schema", schemaValue, schemaValue.$ref)
@@ -177,7 +177,10 @@ const valueGenerator = (schemaValue: OpenAPIV3_1.SchemaObject): ParseSchemaType 
   return faker.word.adjective()
 }
 
-const getRandomLengthArray = (min: number = ARRAY_MIN_LENGTH, max: number = ARRAY_MAX_LENGTH) => {
+export const getRandomLengthArray = (
+  min: number = ARRAY_MIN_LENGTH,
+  max: number = ARRAY_MAX_LENGTH
+) => {
   const length = Math.floor(Math.random() * (max - min + 1)) + min
   return Array.from({ length }, (_, i) => i)
 }
