@@ -1,7 +1,7 @@
 {
-  "name": "openapi-mock-generator",
-  "version": "0.0.1",
-  "description": "mock data generator based openapi",
+  "name": "openapi-ts-mock-generator",
+  "version": "0.0.2",
+  "description": "typescript mock data generator based openapi",
   "scripts": {
     "build": "tsup ./src",
     "test": "vitest run"
@@ -13,7 +13,8 @@
   "keywords": [
     "typescript",
     "openapi",
-    "mock"
+    "mock",
+    "msw"
   ],
   "author": "Bill Park",
   "license": "MIT",
@@ -43,6 +44,9 @@
       "require": "./dist/index.js",
       "types": "./dist/index.d.ts"
     }
+  },
+  "bin": {
+    "openapi-ts-mock-generator": "./dist/cli.js"
   },
   "dependencies": {
     "@apidevtools/swagger-parser": "^10.1.0",
