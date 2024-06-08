@@ -1,4 +1,4 @@
-name: Version and Publish
+name: Version Patcher
 
 on:
   workflow_dispatch:
@@ -40,11 +40,11 @@ jobs:
 
       - name: Bump version
         id: bump_version
-        run: npm version ${{ github.event.inputs.version }}
+        run: echo "BUMPED_VERSION=$(npm version ${{ github.event.inputs.version }})" >> "$GITHUB_OUTPUT"
 
       - name: make Pull Request
         if: success()
         run: |
-          git checkout -b release-${{ steps.bump_version.outputs.version }}
-          git push --set-upstream origin release-${{ steps.bump_version.outputs.version }}
-          gh pr create --title "Release ${{ steps.bump_version.outputs.version }}" --body "Release ${{ steps.bump_version.outputs.version }}" --base main --head release-${{ steps.bump_version.outputs.version }} --label "version bump"
+          git checkout -b release-${{ steps.bump_version.outputs.BUMPED_VERSION }}
+          git push --set-upstream origin release-${{ steps.bump_version.outputs.BUMPED_VERSION }}
+          gh pr create --title "Release ${{ steps.bump_version.outputs.BUMPED_VERSION }}" --body "Release ${{ steps.bump_version.outputs.BUMPED_VERSION }}" --base main --head release-${{ steps.bump_version.outputs.BUMPED_VERSION }} --label "version bump"
