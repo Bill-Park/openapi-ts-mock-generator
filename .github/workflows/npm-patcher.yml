@@ -47,6 +47,4 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          git checkout -b release-${{ steps.bump_version.outputs.BUMPED_VERSION }}
-          git push origin release-${{ steps.bump_version.outputs.BUMPED_VERSION }}
           gh pr create --title "Release ${{ steps.bump_version.outputs.BUMPED_VERSION }}" --body "Release ${{ steps.bump_version.outputs.BUMPED_VERSION }}" --base main --head release-${{ steps.bump_version.outputs.BUMPED_VERSION }} --label "version bump"
