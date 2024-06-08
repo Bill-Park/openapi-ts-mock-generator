@@ -22,6 +22,24 @@ jobs:
           registry-url: https://registry.npmjs.org
       - run: npm ci
       - run: npm run build
+
+      - name: Get current version
+        id: get_version
+        run: echo "CURRENT_VERSION=$(jq -r .version package.json)" >> $GITHUB_OUTPUT
+
       - run: npm publish
+        if: success()
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+
+      - name: Make tag and release
+        if: success()
+        uses: avakar/tag-and-release@v1
+        with:
+          tag_name: v${{ steps.get_version.outputs.CURRENT_VERSION }}
+          release_name: Release ${{ steps.get_version.outputs.CURRENT_VERSION }}
+          body: |
+            - This comment need to be update
+          draft: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
