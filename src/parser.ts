@@ -16,7 +16,7 @@ import { multiLineStr, toUnquotedJSON } from "./writer"
 import SwaggerParser from "@apidevtools/swagger-parser"
 import { pascalCase } from "change-case-all"
 import { existsSync, readFileSync } from "fs"
-import { isReference } from "oazapfts/generate"
+import { SchemaObject, isReference } from "oazapfts/generate"
 import { OpenAPIV3_1 } from "openapi-types"
 import { join } from "path"
 
@@ -33,13 +33,10 @@ export const parseSchema = (
 
   if (schemaValue.type === "object") {
     if (schemaValue.properties === undefined) return {}
-    return Object.entries(schemaValue.properties).reduce(
-      (acc, [key, field]) => {
-        acc[key] = parseSchema(field, specialSchema, options, outputSchema) as SchemaOutputType
-        return acc
-      },
-      {} as Record<string, SchemaOutputType>
-    )
+    return Object.entries(schemaValue.properties).reduce((acc, [key, field]) => {
+      acc[key] = parseSchema(field, specialSchema, options, outputSchema) as SchemaOutputType
+      return acc
+    }, {} as Record<string, SchemaOutputType>)
   } else if (schemaValue.enum !== undefined) {
     // enum value
     const enumValue = options.isStatic
@@ -100,6 +97,19 @@ export const parseSchema = (
           ])
         `)
   } else if (schemaValue.type === "array") {
+    if ("prefixItems" in schemaValue) {
+      const length = faker.number.int({
+        min: schemaValue.minItems,
+        max: schemaValue.maxItems,
+      })
+
+      return (schemaValue.prefixItems as Array<SchemaObject>)
+        .slice(0, length)
+        .map((field) => parseSchema(field, specialSchema, options, outputSchema)) as (
+        | SchemaOutputType
+        | Record<string, SchemaOutputType>
+      )[]
+    }
     // array
     const arrayValue = schemaValue.items
     return getRandomLengthArray(options.arrayMinLength, options.arrayMaxLength).map(() =>
@@ -314,27 +324,21 @@ export const specialFakerParser = (options: Options) => {
     ? JSON.parse(readFileSync(descPath, "utf-8"))
     : {}
 
-  const titleSpecial = Object.entries(titleSpecialKey).reduce(
-    (acc, [key, value]) => {
-      const fakerValue = getFakerValue(value, {
-        isStatic: options.isStatic,
-      })
-      acc[key] = fakerValue
-      return acc
-    },
-    {} as Record<string, SchemaOutputType>
-  )
+  const titleSpecial = Object.entries(titleSpecialKey).reduce((acc, [key, value]) => {
+    const fakerValue = getFakerValue(value, {
+      isStatic: options.isStatic,
+    })
+    acc[key] = fakerValue
+    return acc
+  }, {} as Record<string, SchemaOutputType>)
 
-  const descriptionSpecial = Object.entries(descriptionSpecialKey).reduce(
-    (acc, [key, value]) => {
-      const fakerValue = getFakerValue(value, {
-        isStatic: options.isStatic,
-      })
-      acc[key] = fakerValue
-      return acc
-    },
-    {} as Record<string, SchemaOutputType>
-  )
+  const descriptionSpecial = Object.entries(descriptionSpecialKey).reduce((acc, [key, value]) => {
+    const fakerValue = getFakerValue(value, {
+      isStatic: options.isStatic,
+    })
+    acc[key] = fakerValue
+    return acc
+  }, {} as Record<string, SchemaOutputType>)
 
   return { titleSpecial, descriptionSpecial }
 }
