@@ -41,7 +41,9 @@ export const parseSchema = (
     // enum value
     const enumValue = options.isStatic
       ? faker.helpers.arrayElement(schemaValue.enum)
-      : `faker.helpers.arrayElement(${toUnquotedJSON(schemaValue.enum, {
+      : `faker.helpers.arrayElement<${schemaValue.enum
+          .map((item) => `"${item}"`)
+          .join(" | ")}>(${toUnquotedJSON(schemaValue.enum, {
           depth: 0,
           isStatic: options.isStatic,
           singleLine: true,
