@@ -10,13 +10,10 @@ import { GEN_COMMENT } from "./defaults"
 export const writeHandlers = (paths: PathNormalizedType[], options: Options) => {
   const firstTags = Array.from(new Set(paths.map((path) => path.tags[0])))
   // create records with tag as key
-  const handlersPerTag = firstTags.reduce(
-    (acc, tag) => {
-      acc[tag] = []
-      return acc
-    },
-    {} as Record<string, string[]>
-  )
+  const handlersPerTag = firstTags.reduce((acc, tag) => {
+    acc[tag] = []
+    return acc
+  }, {} as Record<string, string[]>)
 
   paths.forEach((path) => {
     const codeBaseArray = [`  http.${path.method}(\`\${handlerUrl}${path.pathname}\`, () => {`]
@@ -133,13 +130,10 @@ export const writeResponses = async (paths: PathNormalizedType[], options: Optio
 
   const firstTags = Array.from(new Set(paths.map((path) => path.tags[0])))
   // create records with tag as key
-  const codeBasePerTag = firstTags.reduce(
-    (acc, tag) => {
-      acc[tag] = []
-      return acc
-    },
-    {} as Record<string, string[]>
-  )
+  const codeBasePerTag = firstTags.reduce((acc, tag) => {
+    acc[tag] = []
+    return acc
+  }, {} as Record<string, string[]>)
   const specialFakers = specialFakerParser(options)
   paths.forEach((path) => {
     const pathResponses = path.responses.map((res) => {
@@ -154,6 +148,7 @@ export const writeResponses = async (paths: PathNormalizedType[], options: Optio
           `  return ${toUnquotedJSON(outputSchema, {
             depth: 1,
             isStatic: options.isStatic,
+            optional: options.optional,
           })}`
         )
       } else if (res.schema?.type === "array") {
@@ -168,6 +163,7 @@ export const writeResponses = async (paths: PathNormalizedType[], options: Optio
             `  return ${toUnquotedJSON(outputSchema, {
               depth: 1,
               isStatic: options.isStatic,
+              optional: options.optional,
             })}`
           )
         } else {
@@ -179,6 +175,7 @@ export const writeResponses = async (paths: PathNormalizedType[], options: Optio
             `  return ${toUnquotedJSON(outputSchema, {
               depth: 1,
               isStatic: options.isStatic,
+              optional: options.optional,
             })}`
           )
         }
@@ -284,12 +281,14 @@ export const toUnquotedJSON = (
     depth?: number
     isStatic?: boolean
     singleLine?: boolean
+    optional?: boolean
   }
 ): string => {
-  const { depth, isStatic, singleLine } = {
+  const { depth, isStatic, singleLine, optional } = {
     depth: 0,
     isStatic: false,
     singleLine: false,
+    optional: false,
     ...options,
   }
 
@@ -305,14 +304,18 @@ export const toUnquotedJSON = (
   } else if (typeof param === "object") {
     const firstElementSpace = singleLine ? " " : "  "
     const lastComma = singleLine ? ", " : ","
+
     const results = Object.entries(param)
-      .map(
-        ([key, value]) =>
-          `${firstElementSpace}${key}: ${toUnquotedJSON(value, {
-            ...options,
-            depth: depth + 1,
-          })}${lastComma}`
-      )
+      .map(([key, value]) => {
+        const hasNull = optional && typeof value === "string" && value.includes(",null")
+        const nullableTypeExtensionStart = hasNull ? "...(faker.datatype.boolean() ? {" : ""
+        const nullableTypeExtensionEnd = hasNull ? "} : {})" : ""
+
+        return `${firstElementSpace}${nullableTypeExtensionStart}${key}: ${toUnquotedJSON(value, {
+          ...options,
+          depth: depth + 1,
+        })}${nullableTypeExtensionEnd}${lastComma}`
+      })
       .join(lineBreak + prefixSpace)
     return ["{", `${results}`, "}"].join(lineBreak + prefixSpace)
   } else if (

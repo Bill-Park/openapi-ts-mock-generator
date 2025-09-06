@@ -42,6 +42,9 @@ cli
   .option("--clear", "Clear response and handlers directory before generate files.", {
     default: false,
   })
+  .option("--optional", "Generate optional mocks.", {
+    default: false,
+  })
   .example("openapi-ts-mock-generator ./openapi.json")
   .example("openapi-ts-mock-generator http://127.0.0.1/openapi.json")
   .action(async (path, userOptions) => {

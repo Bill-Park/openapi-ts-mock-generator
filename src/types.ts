@@ -12,6 +12,7 @@ export type Options = {
   fakerLocale: string
   generateTarget: string
   clear?: boolean
+  optional?: boolean
 }
 
 export type SchemaOutputType = string | number | boolean | null | undefined | Date
