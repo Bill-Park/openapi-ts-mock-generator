@@ -87,7 +87,7 @@ export type PathNormalizedType = {
 /**
  * 코드 생성 관련 공통 옵션
  */
-export interface CodeFormatOptions {
+export type CodeFormatOptions = {
   depth?: number
   isStatic?: boolean
   singleLine?: boolean
@@ -96,14 +96,9 @@ export interface CodeFormatOptions {
 /**
  * TypeScript 코드 생성 옵션 (nullable 타입 확장 포함)
  */
-export interface TypeScriptCodeOptions extends CodeFormatOptions {
+export type TypeScriptCodeOptions = CodeFormatOptions & {
   optional?: boolean
 }
-
-/**
- * JSON 포맷 옵션
- */
-export interface JsonFormatOptions extends CodeFormatOptions {}
 
 /**
  * null 또는 undefined가 아닌 값인지 확인하는 타입 가드

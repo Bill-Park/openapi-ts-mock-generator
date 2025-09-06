@@ -2,13 +2,13 @@
  * JSON 변환 관련 유틸리티 함수들
  */
 
-import { ParseSchemaType, JsonFormatOptions } from "../core"
+import { ParseSchemaType, CodeFormatOptions } from "../core"
 
 /**
  * 객체를 따옴표 없는 JSON 문자열로 변환
  * TypeScript 코드 생성에 사용되며, 동적 faker 호출을 그대로 유지
  */
-export const toUnquotedJSON = (param: ParseSchemaType, options: JsonFormatOptions = {}): string => {
+export const toUnquotedJSON = (param: ParseSchemaType, options: CodeFormatOptions = {}): string => {
   const { depth = 0, isStatic = false, singleLine = false } = options
 
   const prefixSpace = " ".repeat(depth * 2) // 들여쓰기용
