@@ -2,13 +2,7 @@
  * JSON 변환 관련 유틸리티 함수들
  */
 
-import { ParseSchemaType } from "../core"
-
-export interface JsonFormatOptions {
-  depth?: number
-  isStatic?: boolean
-  singleLine?: boolean
-}
+import { ParseSchemaType, JsonFormatOptions } from "../core"
 
 /**
  * 객체를 따옴표 없는 JSON 문자열로 변환

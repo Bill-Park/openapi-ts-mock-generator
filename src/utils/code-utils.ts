@@ -2,14 +2,7 @@
  * 코드 생성 관련 유틸리티 함수들
  */
 
-import { ParseSchemaType } from "../core"
-
-export interface CodeGenerationOptions {
-  depth?: number
-  isStatic?: boolean
-  singleLine?: boolean
-  optional?: boolean
-}
+import { ParseSchemaType, TypeScriptCodeOptions, CodeFormatOptions } from "../core"
 
 /**
  * 객체를 TypeScript 코드로 변환 (nullable 타입 확장 지원)
@@ -17,7 +10,7 @@ export interface CodeGenerationOptions {
  */
 export const toTypeScriptCode = (
   param: ParseSchemaType,
-  options: CodeGenerationOptions = {}
+  options: TypeScriptCodeOptions = {}
 ): string => {
   const { depth = 0, isStatic = false, singleLine = false, optional = false } = options
 
@@ -69,7 +62,7 @@ export const toTypeScriptCode = (
 const generateObjectProperty = (
   key: string,
   value: any,
-  options: CodeGenerationOptions,
+  options: TypeScriptCodeOptions,
   prefixSpace: string,
   lineBreak: string,
   lastComma: string
@@ -93,10 +86,7 @@ const generateObjectProperty = (
 /**
  * 순수한 JSON 변환 (코드 생성 로직 없음)
  */
-export const toCleanJSON = (
-  param: ParseSchemaType,
-  options: { depth?: number; singleLine?: boolean } = {}
-): string => {
+export const toCleanJSON = (param: ParseSchemaType, options: CodeFormatOptions = {}): string => {
   const { depth = 0, singleLine = false } = options
 
   const prefixSpace = " ".repeat(depth * 2)
