@@ -1,33 +1,36 @@
+/**
+ * OpenAPI 스키마 파싱 및 값 생성 로직
+ */
+
 import {
-  ARRAY_MAX_LENGTH,
-  ARRAY_MIN_LENGTH,
-  MAX_INTEGER,
-  MAX_NUMBER,
-  MAX_STRING_LENGTH,
-  MAX_WORD_LENGTH,
-  MIN_INTEGER,
-  MIN_NUMBER,
-  MIN_STRING_LENGTH,
-  MIN_WORD_LENGTH,
+  Options,
+  ParseSchemaType,
+  SchemaOutputType,
   faker,
-} from "./core"
-import { Options, ParseSchemaType, SchemaOutputType } from "./core"
-import {
-  multiLineStr,
-  toUnquotedJSON,
-  uuidToB64,
-  getRandomLengthArray,
-  readJsonFile,
-} from "./utils"
+  MIN_STRING_LENGTH,
+  MAX_STRING_LENGTH,
+  MIN_INTEGER,
+  MAX_INTEGER,
+  MIN_NUMBER,
+  MAX_NUMBER,
+  MIN_WORD_LENGTH,
+  MAX_WORD_LENGTH,
+} from "../core"
+import { multiLineStr, toUnquotedJSON, uuidToB64, getRandomLengthArray } from "../utils"
 import SwaggerParser from "@apidevtools/swagger-parser"
 import { pascalCase } from "change-case-all"
 import { SchemaObject, isReference } from "oazapfts/generate"
 import { OpenAPIV3_1 } from "openapi-types"
-import { join } from "path"
 
+/**
+ * OpenAPI 스키마를 파싱하여 실제 값을 생성
+ */
 export const parseSchema = (
   schemaValue: OpenAPIV3_1.ReferenceObject | OpenAPIV3_1.SchemaObject,
-  specialSchema: ReturnType<typeof specialFakerParser>,
+  specialSchema: {
+    titleSpecial: Record<string, SchemaOutputType>
+    descriptionSpecial: Record<string, SchemaOutputType>
+  },
   options: Options,
   outputSchema: ParseSchemaType = {}
 ): ParseSchemaType => {
@@ -126,9 +129,24 @@ export const parseSchema = (
   return valueGenerator(schemaValue, specialSchema, options.isStatic)
 }
 
-const valueGenerator = (
+/**
+ * 참조 스키마를 파싱하여 이름과 값을 반환
+ */
+export const refSchemaParser = (ref: string, refs: SwaggerParser.$Refs) => {
+  const schemaName = pascalCase(ref.replace("#/components/schemas/", ""))
+  const schemaValue: OpenAPIV3_1.SchemaObject = refs.get(ref)
+  return { name: schemaName, value: schemaValue }
+}
+
+/**
+ * 스키마 타입별로 실제 값을 생성하는 함수
+ */
+export const valueGenerator = (
   schemaValue: OpenAPIV3_1.SchemaObject,
-  specialSchema: ReturnType<typeof specialFakerParser>,
+  specialSchema: {
+    titleSpecial: Record<string, SchemaOutputType>
+    descriptionSpecial: Record<string, SchemaOutputType>
+  },
   isStatic: boolean
 ): ParseSchemaType => {
   // if title or description in special keys
@@ -253,74 +271,4 @@ const valueGenerator = (
   }
 
   return isStatic ? faker.word.adjective() : "faker.word.adjective()"
-}
-
-export const refSchemaParser = (ref: string, refs: SwaggerParser.$Refs) => {
-  const schemaName = pascalCase(ref.replace("#/components/schemas/", ""))
-  const schemaValue: OpenAPIV3_1.SchemaObject = refs.get(ref)
-  return { name: schemaName, value: schemaValue }
-}
-
-const getFakerValue = (value: object, options: { isStatic: boolean }): SchemaOutputType => {
-  if ("value" in value) {
-    // value type, use directly
-    return value.value as SchemaOutputType
-  }
-  if ("module" in value && "type" in value) {
-    // dynamic faker
-    if (options.isStatic === false) {
-      const fakerOption =
-        "options" in value
-          ? toUnquotedJSON(value.options, {
-              depth: 0,
-              isStatic: options.isStatic,
-              singleLine: true,
-            })
-          : ""
-      return `faker.${value.module}.${value.type}(${fakerOption})`
-    }
-    // faker type, make faker
-    const fakerModule = faker[value.module as keyof typeof faker]
-    if (fakerModule === undefined) {
-      console.warn("can't find faker module", fakerModule)
-      return undefined
-    }
-    const fakerFunc = fakerModule[value.type as keyof typeof fakerModule] as Function
-    if (fakerFunc === undefined || typeof fakerFunc !== "function") {
-      console.warn("can't find faker function", fakerFunc)
-      return undefined
-    }
-    return "options" in value ? fakerFunc(value.options) : fakerFunc()
-  }
-  return undefined
-}
-
-export const specialFakerParser = (options: Options) => {
-  if (options.specialPath === undefined)
-    return {
-      titleSpecial: {},
-      descriptionSpecial: {},
-    }
-  const titlePath = join(options.baseDir ?? "", options.specialPath, "titles.json")
-  const descPath = join(options.baseDir ?? "", options.specialPath, "descriptions.json")
-  const titleSpecialKey: Record<string, object> = readJsonFile(titlePath, {})
-  const descriptionSpecialKey: Record<string, object> = readJsonFile(descPath, {})
-
-  const titleSpecial = Object.entries(titleSpecialKey).reduce((acc, [key, value]) => {
-    const fakerValue = getFakerValue(value, {
-      isStatic: options.isStatic,
-    })
-    acc[key] = fakerValue
-    return acc
-  }, {} as Record<string, SchemaOutputType>)
-
-  const descriptionSpecial = Object.entries(descriptionSpecialKey).reduce((acc, [key, value]) => {
-    const fakerValue = getFakerValue(value, {
-      isStatic: options.isStatic,
-    })
-    acc[key] = fakerValue
-    return acc
-  }, {} as Record<string, SchemaOutputType>)
-
-  return { titleSpecial, descriptionSpecial }
 }

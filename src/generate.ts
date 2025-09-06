@@ -1,4 +1,5 @@
-import { parseSchema, specialFakerParser } from "./parser"
+import { parseSchema, specialFakerParser } from "./parsers"
+import { getOpenAPIDocsDeref, getOpenAPIDocsBundle } from "./parsers"
 import {
   HttpMethods,
   Options,
@@ -8,24 +9,7 @@ import {
   isNotNullish,
 } from "./core"
 import { resolveFilePath } from "./utils"
-import SwaggerParser from "@apidevtools/swagger-parser"
 import { isReference } from "oazapfts/generate"
-import { OpenAPIV3_1 } from "openapi-types"
-import * as path from "path"
-
-const getOpenAPIDocsDeref = async (path: string) => {
-  const doc = await SwaggerParser.dereference(path)
-  const isOpenApiV3 = "openapi" in doc && doc.openapi.startsWith("3")
-  if (isOpenApiV3) return doc as OpenAPIV3_1.Document
-  return
-}
-
-const getOpenAPIDocsBundle = async (path: string) => {
-  const doc = await SwaggerParser.bundle(path)
-  const isOpenApiV3 = "openapi" in doc && doc.openapi.startsWith("3")
-  if (isOpenApiV3) return doc as OpenAPIV3_1.Document
-  return
-}
 
 export const generateSchema = async (options: Options) => {
   const openapiPath = resolveFilePath(options.path, options.baseDir)

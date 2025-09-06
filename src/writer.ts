@@ -1,4 +1,4 @@
-import { parseSchema, refSchemaParser, specialFakerParser } from "./parser"
+import { parseSchema, refSchemaParser, specialFakerParser } from "./parsers"
 import {
   getRandomLengthArray,
   toUnquotedJSON,
