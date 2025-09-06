@@ -1,11 +1,11 @@
 import { getRandomLengthArray, parseSchema, refSchemaParser, specialFakerParser } from "./parser"
-import { Options, ParseSchemaType, PathNormalizedType, SchemaOutputType } from "./types"
+import { Options, ParseSchemaType, PathNormalizedType, SchemaOutputType } from "./core"
 import SwaggerParser from "@apidevtools/swagger-parser"
 import { camelCase, pascalCase } from "change-case-all"
 import { existsSync, mkdirSync, writeFileSync, rmSync, readdirSync } from "fs"
 import { isReference } from "oazapfts/generate"
 import * as path from "path"
-import { GEN_COMMENT } from "./defaults"
+import { GEN_COMMENT } from "./core"
 
 export const writeHandlers = (paths: PathNormalizedType[], options: Options) => {
   const firstTags = Array.from(new Set(paths.map((path) => path.tags[0])))

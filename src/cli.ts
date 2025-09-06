@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { main } from "."
-import { Options } from "./types"
+import { transformCliOptions } from "./core"
 import cac from "cac"
 
 const cli = cac()
@@ -48,18 +48,10 @@ cli
   .example("openapi-ts-mock-generator ./openapi.json")
   .example("openapi-ts-mock-generator http://127.0.0.1/openapi.json")
   .action(async (path, userOptions) => {
-    const options: Options = {
-      path: path,
+    const options = transformCliOptions({
+      path,
       ...userOptions,
-      isStatic: userOptions.static,
-      fakerLocale: userOptions.locales,
-      includeCodes: userOptions.includeCodes
-        ? userOptions.includeCodes
-            .toString()
-            .split(",")
-            .map((code: string) => parseInt(code))
-        : undefined,
-    }
+    })
     await main(options)
   })
 

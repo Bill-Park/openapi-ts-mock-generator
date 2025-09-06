@@ -1,5 +1,5 @@
 import { generateAPI, generateSchema } from "./generate"
-import { Options } from "./types"
+import { Options } from "./core"
 import { writeFaker, writeHandlers, writeResponses, writeSchema } from "./writer"
 import { existsSync, mkdirSync } from "fs"
 

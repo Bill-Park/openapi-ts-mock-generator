@@ -10,8 +10,8 @@ import {
   MIN_STRING_LENGTH,
   MIN_WORD_LENGTH,
   faker,
-} from "./defaults"
-import { Options, ParseSchemaType, SchemaOutputType } from "./types"
+} from "./core"
+import { Options, ParseSchemaType, SchemaOutputType } from "./core"
 import { multiLineStr, toUnquotedJSON } from "./writer"
 import SwaggerParser from "@apidevtools/swagger-parser"
 import { pascalCase } from "change-case-all"
