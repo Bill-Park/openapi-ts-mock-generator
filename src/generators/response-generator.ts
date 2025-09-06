@@ -7,6 +7,7 @@ import { Options, PathNormalizedType, SchemaOutputType } from "../core"
 import {
   getRandomLengthArray,
   toUnquotedJSON,
+  toTypeScriptCode,
   ensureDir,
   clearDirectory,
   resolveFilePath,
@@ -70,7 +71,7 @@ const generateSingleResponse = (
     const outputSchema = parseSchema(value, specialFakers, options)
     codeBaseArray.push(`  // Schema is ${name}`)
     codeBaseArray.push(
-      `  return ${toUnquotedJSON(outputSchema, {
+      `  return ${toTypeScriptCode(outputSchema, {
         depth: 1,
         isStatic: options.isStatic,
         optional: options.optional,
@@ -84,7 +85,7 @@ const generateSingleResponse = (
       )
       codeBaseArray.push(`  // Schema is ${name} array`)
       codeBaseArray.push(
-        `  return ${toUnquotedJSON(outputSchema, {
+        `  return ${toTypeScriptCode(outputSchema, {
           depth: 1,
           isStatic: options.isStatic,
           optional: options.optional,
@@ -95,7 +96,7 @@ const generateSingleResponse = (
         () => res.schema && parseSchema(res.schema.value, specialFakers, options)
       )
       codeBaseArray.push(
-        `  return ${toUnquotedJSON(outputSchema, {
+        `  return ${toTypeScriptCode(outputSchema, {
           depth: 1,
           isStatic: options.isStatic,
           optional: options.optional,

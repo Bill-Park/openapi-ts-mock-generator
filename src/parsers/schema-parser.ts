@@ -16,7 +16,7 @@ import {
   MIN_WORD_LENGTH,
   MAX_WORD_LENGTH,
 } from "../core"
-import { multiLineStr, toUnquotedJSON, uuidToB64, getRandomLengthArray } from "../utils"
+import { compressCode, toUnquotedJSON, uuidToB64, getRandomLengthArray } from "../utils"
 import SwaggerParser from "@apidevtools/swagger-parser"
 import { pascalCase } from "change-case-all"
 import { SchemaObject, isReference } from "oazapfts/generate"
@@ -75,7 +75,7 @@ export const parseSchema = (
             return parseSchema(field, specialSchema, options, outputSchema)
           })
         )
-      : multiLineStr(`
+      : compressCode(`
           faker.helpers.arrayElement([
             ${anyOfValue.map((field) =>
               toUnquotedJSON(parseSchema(field, specialSchema, options, {}), {
@@ -95,7 +95,7 @@ export const parseSchema = (
             return parseSchema(field, specialSchema, options, outputSchema)
           })
         )
-      : multiLineStr(`
+      : compressCode(`
           faker.helpers.arrayElement([
             ${oneOfValue.map((field) =>
               toUnquotedJSON(parseSchema(field, specialSchema, options, {}), {
@@ -167,7 +167,7 @@ export const valueGenerator = (
             to: "2030-12-31T23:59:59.999Z",
           })
           .toISOString()
-      : multiLineStr(`
+      : compressCode(`
           faker.date.between({
             from: "2020-01-01T00:00:00.000Z",
             to: "2030-12-31T23:59:59.999Z",
@@ -184,7 +184,7 @@ export const valueGenerator = (
           })
           .toISOString()
           .split("T")[0]
-      : multiLineStr(`
+      : compressCode(`
           faker.date.between({
             from: "2020-01-01T00:00:00.000Z",
             to: "2030-12-31T23:59:59.999Z",
@@ -201,7 +201,7 @@ export const valueGenerator = (
     const baseUuid = faker.string.uuid()
     return isStatic
       ? uuidToB64(baseUuid)
-      : multiLineStr(`
+      : compressCode(`
           Buffer.from(faker.string.uuid().replace(/-/g, ""), "hex")
           .toString("base64")
           .replace(/\\+/g, "-")
@@ -220,7 +220,7 @@ export const valueGenerator = (
       ? faker.string.alphanumeric({
           length: { min: minLength, max: maxLength },
         })
-      : multiLineStr(`
+      : compressCode(`
           faker.string.alphanumeric({
             length: { min: ${minLength}, max: ${maxLength} },
           })
@@ -228,7 +228,7 @@ export const valueGenerator = (
   } else if (schemaValue.type === "integer") {
     return isStatic
       ? faker.number.int({ min: MIN_INTEGER, max: MAX_INTEGER })
-      : multiLineStr(`
+      : compressCode(`
           faker.number.int({ min: ${MIN_INTEGER}, max: ${MAX_INTEGER} })
         `)
   } else if (schemaValue.type === "number") {
@@ -240,7 +240,7 @@ export const valueGenerator = (
           max: maxNumber,
           fractionDigits: 2,
         })
-      : multiLineStr(`
+      : compressCode(`
           faker.number.float({
             min: ${minNumber},
             max: ${maxNumber},
@@ -260,7 +260,7 @@ export const valueGenerator = (
             max: MAX_WORD_LENGTH,
           },
         })
-      : multiLineStr(`
+      : compressCode(`
           faker.word.words({
             count: {
               min: ${MIN_WORD_LENGTH},

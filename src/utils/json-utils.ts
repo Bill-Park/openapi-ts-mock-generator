@@ -8,7 +8,6 @@ export interface JsonFormatOptions {
   depth?: number
   isStatic?: boolean
   singleLine?: boolean
-  optional?: boolean
 }
 
 /**
@@ -16,7 +15,7 @@ export interface JsonFormatOptions {
  * TypeScript 코드 생성에 사용되며, 동적 faker 호출을 그대로 유지
  */
 export const toUnquotedJSON = (param: ParseSchemaType, options: JsonFormatOptions = {}): string => {
-  const { depth = 0, isStatic = false, singleLine = false, optional = false } = options
+  const { depth = 0, isStatic = false, singleLine = false } = options
 
   const prefixSpace = " ".repeat(depth * 2) // 들여쓰기용
   const lineBreak = singleLine ? "" : "\n"
@@ -37,14 +36,10 @@ export const toUnquotedJSON = (param: ParseSchemaType, options: JsonFormatOption
 
     const results = Object.entries(param)
       .map(([key, value]) => {
-        const hasNull = optional && typeof value === "string" && value.includes(",null")
-        const nullableTypeExtensionStart = hasNull ? "...(faker.datatype.boolean() ? {" : ""
-        const nullableTypeExtensionEnd = hasNull ? "} : {})" : ""
-
-        return `${firstElementSpace}${nullableTypeExtensionStart}${key}: ${toUnquotedJSON(value, {
+        return `${firstElementSpace}${key}: ${toUnquotedJSON(value, {
           ...options,
           depth: depth + 1,
-        })}${nullableTypeExtensionEnd}${lastComma}`
+        })}${lastComma}`
       })
       .join(lineBreak + prefixSpace)
     return ["{", `${results}`, "}"].join(lineBreak + prefixSpace)

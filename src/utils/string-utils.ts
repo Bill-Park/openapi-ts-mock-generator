@@ -3,20 +3,6 @@
  */
 
 /**
- * 멀티라인 문자열을 한 줄로 압축하고 정리
- * - 줄바꿈을 공백으로 변환
- * - 연속된 공백을 하나로 압축
- * - 공백 + 점을 점으로 변환
- */
-export const multiLineStr = (str: string): string => {
-  return str
-    .replace(/\n/g, " ") // 줄바꿈을 공백으로
-    .replace(/\s+/g, " ") // 연속된 공백을 하나로
-    .replace(/\s\./g, ".") // 공백 + 점을 점으로
-    .trim()
-}
-
-/**
  * UUID를 Base64 형태로 변환
  * URL-safe Base64 인코딩을 사용하여 패딩 제거
  */

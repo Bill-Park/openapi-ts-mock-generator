@@ -8,6 +8,9 @@ export * from "./string-utils"
 // JSON utilities
 export * from "./json-utils"
 
+// Code generation utilities
+export * from "./code-utils"
+
 // Array utilities
 export * from "./array-utils"
 
