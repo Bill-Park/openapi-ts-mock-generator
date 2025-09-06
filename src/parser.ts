@@ -12,10 +12,15 @@ import {
   faker,
 } from "./core"
 import { Options, ParseSchemaType, SchemaOutputType } from "./core"
-import { multiLineStr, toUnquotedJSON } from "./writer"
+import {
+  multiLineStr,
+  toUnquotedJSON,
+  uuidToB64,
+  getRandomLengthArray,
+  readJsonFile,
+} from "./utils"
 import SwaggerParser from "@apidevtools/swagger-parser"
 import { pascalCase } from "change-case-all"
-import { existsSync, readFileSync } from "fs"
 import { SchemaObject, isReference } from "oazapfts/generate"
 import { OpenAPIV3_1 } from "openapi-types"
 import { join } from "path"
@@ -119,16 +124,6 @@ export const parseSchema = (
     ) as (SchemaOutputType | Record<string, SchemaOutputType>)[]
   }
   return valueGenerator(schemaValue, specialSchema, options.isStatic)
-}
-
-const uuidToB64 = (uuid: string) => {
-  const uuidBuffer = Buffer.from(uuid.replace(/-/g, ""), "hex")
-  const base64Uuid = uuidBuffer
-    .toString("base64")
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=/g, "")
-  return base64Uuid
 }
 
 const valueGenerator = (
@@ -260,17 +255,6 @@ const valueGenerator = (
   return isStatic ? faker.word.adjective() : "faker.word.adjective()"
 }
 
-export const getRandomLengthArray = (
-  min: number = ARRAY_MIN_LENGTH,
-  max: number = ARRAY_MAX_LENGTH
-) => {
-  const length = faker.number.int({
-    min,
-    max,
-  })
-  return Array.from({ length }, (_, i) => i)
-}
-
 export const refSchemaParser = (ref: string, refs: SwaggerParser.$Refs) => {
   const schemaName = pascalCase(ref.replace("#/components/schemas/", ""))
   const schemaValue: OpenAPIV3_1.SchemaObject = refs.get(ref)
@@ -319,12 +303,8 @@ export const specialFakerParser = (options: Options) => {
     }
   const titlePath = join(options.baseDir ?? "", options.specialPath, "titles.json")
   const descPath = join(options.baseDir ?? "", options.specialPath, "descriptions.json")
-  const titleSpecialKey: Record<string, object> = existsSync(titlePath)
-    ? JSON.parse(readFileSync(titlePath, "utf-8"))
-    : {}
-  const descriptionSpecialKey: Record<string, object> = existsSync(descPath)
-    ? JSON.parse(readFileSync(descPath, "utf-8"))
-    : {}
+  const titleSpecialKey: Record<string, object> = readJsonFile(titlePath, {})
+  const descriptionSpecialKey: Record<string, object> = readJsonFile(descPath, {})
 
   const titleSpecial = Object.entries(titleSpecialKey).reduce((acc, [key, value]) => {
     const fakerValue = getFakerValue(value, {

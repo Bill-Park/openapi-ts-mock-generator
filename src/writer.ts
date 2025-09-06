@@ -1,8 +1,15 @@
-import { getRandomLengthArray, parseSchema, refSchemaParser, specialFakerParser } from "./parser"
-import { Options, ParseSchemaType, PathNormalizedType, SchemaOutputType } from "./core"
+import { parseSchema, refSchemaParser, specialFakerParser } from "./parser"
+import {
+  getRandomLengthArray,
+  toUnquotedJSON,
+  ensureDir,
+  clearDirectory,
+  resolveFilePath,
+} from "./utils"
+import { Options, PathNormalizedType, SchemaOutputType } from "./core"
 import SwaggerParser from "@apidevtools/swagger-parser"
 import { camelCase, pascalCase } from "change-case-all"
-import { existsSync, mkdirSync, writeFileSync, rmSync, readdirSync } from "fs"
+import { writeFileSync } from "fs"
 import { isReference } from "oazapfts/generate"
 import * as path from "path"
 import { GEN_COMMENT } from "./core"
@@ -81,13 +88,9 @@ export const writeHandlers = (paths: PathNormalizedType[], options: Options) => 
       `]`,
     ].join("\n")
     const directory = path.join(options.baseDir ?? "", "handlers")
-    if (!existsSync(directory)) {
-      mkdirSync(directory, { recursive: true })
-    } else if (options.clear) {
-      // clear directory
-      readdirSync(directory).forEach((file) => {
-        rmSync(path.join(directory, file))
-      })
+    ensureDir(directory)
+    if (options.clear) {
+      clearDirectory(directory)
     }
     const fileName = path.join(directory, `${tag}.ts`)
     writeFileSync(fileName, GEN_COMMENT + mockHandlers)
@@ -122,9 +125,7 @@ export const writeHandlers = (paths: PathNormalizedType[], options: Options) => 
 
 export const writeResponses = async (paths: PathNormalizedType[], options: Options) => {
   const parser = new SwaggerParser()
-  const openapiPath = options.path.startsWith("http")
-    ? options.path
-    : path.join(options.baseDir ?? "", options.path)
+  const openapiPath = resolveFilePath(options.path, options.baseDir)
   await parser.dereference(openapiPath)
   const refs = parser.$refs
 
@@ -205,13 +206,9 @@ export const writeResponses = async (paths: PathNormalizedType[], options: Optio
   })
 
   const directory = path.join(options.baseDir ?? "", "response")
-  if (!existsSync(directory)) {
-    mkdirSync(directory, { recursive: true })
-  } else if (options.clear) {
-    // clear directory
-    readdirSync(directory).forEach((file) => {
-      rmSync(path.join(directory, file))
-    })
+  ensureDir(directory)
+  if (options.clear) {
+    clearDirectory(directory)
   }
 
   Object.entries(codeBasePerTag).forEach(([tag, responses]) => {
@@ -259,9 +256,7 @@ export const writeSchema = (schemas: Record<string, SchemaOutputType>, options: 
 
 export const writeFaker = (options: Options) => {
   const directory = path.join(options.baseDir ?? "")
-  if (!existsSync(directory)) {
-    mkdirSync(directory, { recursive: true })
-  }
+  ensureDir(directory)
   const localeOption = options.fakerLocale.replace(",", ", ")
   const importFaker = `import { Faker, ${localeOption} } from "@faker-js/faker"\n\n`
   const fakerDeclare = [
@@ -273,67 +268,4 @@ export const writeFaker = (options: Options) => {
   const outputFileName = path.join(`${options.baseDir}`, "fakers.ts")
   writeFileSync(outputFileName, GEN_COMMENT + importFaker + fakerDeclare)
   console.log(`Generated fakers ${outputFileName}`)
-}
-
-export const toUnquotedJSON = (
-  param: ParseSchemaType,
-  options: {
-    depth?: number
-    isStatic?: boolean
-    singleLine?: boolean
-    optional?: boolean
-  }
-): string => {
-  const { depth, isStatic, singleLine, optional } = {
-    depth: 0,
-    isStatic: false,
-    singleLine: false,
-    optional: false,
-    ...options,
-  }
-
-  const prefixSpace = " ".repeat(depth * 2) // for indent
-  const lineBreak = singleLine ? "" : "\n"
-
-  if (param === null) {
-    return "null"
-  } else if (Array.isArray(param)) {
-    const results = param.map((elem) => toUnquotedJSON(elem, { ...options, depth: depth + 1 }))
-    const firstElementSpace = singleLine ? "" : "  "
-    return ["[", firstElementSpace + results.join(", "), "]"].join(lineBreak + prefixSpace)
-  } else if (typeof param === "object") {
-    const firstElementSpace = singleLine ? " " : "  "
-    const lastComma = singleLine ? ", " : ","
-
-    const results = Object.entries(param)
-      .map(([key, value]) => {
-        const hasNull = optional && typeof value === "string" && value.includes(",null")
-        const nullableTypeExtensionStart = hasNull ? "...(faker.datatype.boolean() ? {" : ""
-        const nullableTypeExtensionEnd = hasNull ? "} : {})" : ""
-
-        return `${firstElementSpace}${nullableTypeExtensionStart}${key}: ${toUnquotedJSON(value, {
-          ...options,
-          depth: depth + 1,
-        })}${nullableTypeExtensionEnd}${lastComma}`
-      })
-      .join(lineBreak + prefixSpace)
-    return ["{", `${results}`, "}"].join(lineBreak + prefixSpace)
-  } else if (
-    typeof param === "string" &&
-    isStatic === false &&
-    (param.startsWith("faker") || param.startsWith("Buffer.from(faker"))
-  ) {
-    return param // dynamic mode, start with faker or Buffer.from(faker)
-  } else if (typeof param === "string" && param.endsWith(" as const")) {
-    // split " as const" from string
-    return `"${param.slice(0, -" as const".length)}" as const`
-  }
-  return JSON.stringify(param)
-}
-
-export const multiLineStr = (str: string) => {
-  // line break to space
-  // multiple space to single space
-  // space + dot to dot
-  return str.replace(/\n/g, " ").replace(/\s+/g, " ").replace(/\s\./g, ".").trim()
 }

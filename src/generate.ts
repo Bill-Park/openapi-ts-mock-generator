@@ -7,6 +7,7 @@ import {
   SchemaOutputType,
   isNotNullish,
 } from "./core"
+import { resolveFilePath } from "./utils"
 import SwaggerParser from "@apidevtools/swagger-parser"
 import { isReference } from "oazapfts/generate"
 import { OpenAPIV3_1 } from "openapi-types"
@@ -27,9 +28,7 @@ const getOpenAPIDocsBundle = async (path: string) => {
 }
 
 export const generateSchema = async (options: Options) => {
-  const openapiPath = options.path.startsWith("http")
-    ? options.path
-    : path.join(options.baseDir ?? "", options.path)
+  const openapiPath = resolveFilePath(options.path, options.baseDir)
   const doc = await getOpenAPIDocsDeref(openapiPath)
   const sampleSchemas = doc?.components?.schemas
   if (sampleSchemas === undefined) {
@@ -45,9 +44,7 @@ export const generateSchema = async (options: Options) => {
 }
 
 export const generateAPI = async (options: Options) => {
-  const openapiPath = options.path.startsWith("http")
-    ? options.path
-    : path.join(options.baseDir ?? "", options.path)
+  const openapiPath = resolveFilePath(options.path, options.baseDir)
   const doc = await getOpenAPIDocsBundle(openapiPath)
 
   const samplePaths = doc?.paths
