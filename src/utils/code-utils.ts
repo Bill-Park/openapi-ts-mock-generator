@@ -12,7 +12,7 @@ export const toTypeScriptCode = (
   param: ParseSchemaType,
   options: TypeScriptCodeOptions
 ): string => {
-  const { depth = 0, isStatic, isSingleLine, isOptional } = options
+  const { depth, isStatic, isSingleLine } = options
 
   const prefixSpace = " ".repeat(depth * 2) // 들여쓰기용
   const lineBreak = isSingleLine ? "" : "\n"
@@ -40,20 +40,40 @@ export const toTypeScriptCode = (
     return ["{", `${results}`, "}"].join(lineBreak + prefixSpace)
   }
 
-  if (
-    typeof param === "string" &&
-    isStatic === false &&
-    (param.startsWith("faker") || param.startsWith("Buffer.from(faker"))
-  ) {
-    return param // 동적 모드에서 faker 호출은 그대로 유지
-  }
+  // 문자열 처리
+  if (typeof param === "string") {
+    // 동적 faker 호출은 그대로 유지
+    if (
+      isStatic === false &&
+      (param.startsWith("faker") || param.startsWith("Buffer.from(faker"))
+    ) {
+      return param
+    }
 
-  if (typeof param === "string" && param.endsWith(" as const")) {
     // " as const" 분리하여 처리
-    return `"${param.slice(0, -" as const".length)}" as const`
+    if (param.endsWith(" as const")) {
+      return `"${param.slice(0, -" as const".length)}" as const`
+    }
   }
 
   return JSON.stringify(param)
+}
+
+/**
+ * nullable 타입 확장 여부 확인
+ */
+const shouldApplyNullableExtension = (value: any, isOptional: boolean): boolean => {
+  if (!isOptional) return false
+
+  // 값이 null인 경우
+  if (value === null) return true
+
+  // 문자열 및 null을 포함한 경우
+  if (typeof value === "string" && value.includes(",null")) {
+    return true
+  }
+
+  return false
 }
 
 /**
@@ -71,9 +91,9 @@ const generateObjectProperty = (
   const firstElementSpace = options.isSingleLine ? " " : "  "
 
   // nullable 타입 확장 로직
-  const hasNull = optional && typeof value === "string" && value.includes(",null")
-  const nullableTypeExtensionStart = hasNull ? "...(faker.datatype.boolean() ? {" : ""
-  const nullableTypeExtensionEnd = hasNull ? "} : {})" : ""
+  const shouldApplyNullable = shouldApplyNullableExtension(value, isOptional)
+  const nullableTypeExtensionStart = shouldApplyNullable ? "...(faker.datatype.boolean() ? {" : ""
+  const nullableTypeExtensionEnd = shouldApplyNullable ? "} : {})" : ""
 
   const propertyValue = toTypeScriptCode(value, {
     ...options,
