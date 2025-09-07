@@ -9,7 +9,7 @@ export const defaultOptions: Options = {
   baseDir: "./",
   arrayMinLength: 1,
   arrayMaxLength: 3,
-  isStatic: true,
+  isStatic: false,
   handlerUrl: "*",
   fakerLocale: "ko",
   generateTarget: "api,schema",
