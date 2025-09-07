@@ -1,49 +1,50 @@
 #!/usr/bin/env node
 import { main } from "."
-import { transformCliOptions } from "./core"
+import { defaultOptions, transformCliOptions } from "./core"
 import cac from "cac"
 
 const cli = cac()
 
 cli
   .command("<path>", "Generating msw mock definitions with random fake data.")
-  .option("-b, --base-dir <baseDir>", "Base directory for the generated files.", {
-    default: ".",
-  })
+  .option("-b, --base-dir <baseDir>", "Base directory for the generated files.", {})
   .option(
     "-c, --include-codes <codes>",
     "Comma separated list of status codes to generate responses for.",
     {
-      default: undefined,
+      default: defaultOptions.includeCodes,
     }
   )
   .option("-m, --array-min-length <length>", "Minimum array length.", {
-    default: "1",
+    default: defaultOptions.arrayMinLength,
   })
   .option("-M, --array-max-length <length>", "Maximum array length.", {
-    default: "3",
+    default: defaultOptions.arrayMaxLength,
   })
 
   .option("--special-path <specialPath>", "Generate special faker functions.", {
-    default: undefined,
+    default: defaultOptions.specialPath,
   })
   .option("--handler-url <handlerUrl>", "URL for the generated handlers", {
-    default: "*",
+    default: defaultOptions.handlerUrl,
   })
   .option("-l, --locales <locales>", "Comma separated list of locales for faker.", {
-    default: "ko",
-  })
-  .option("-s, --static", "Generate static mocks.", {
-    default: false,
+    default: defaultOptions.fakerLocale,
   })
   .option("-t, --generate-target <targets>", "Comma separated list of targets to generate.", {
-    default: "api,schema",
+    default: defaultOptions.generateTarget,
   })
   .option("--clear", "Clear response and handlers directory before generate files.", {
-    default: false,
+    default: defaultOptions.clear,
+  })
+  .option("-s, --static", "Generate static mocks.", {
+    default: defaultOptions.isStatic,
   })
   .option("--optional", "Generate optional mocks.", {
-    default: false,
+    default: defaultOptions.isOptional,
+  })
+  .option("--single-line", "Generate single line mocks.", {
+    default: defaultOptions.isSingleLine,
   })
   .example("openapi-ts-mock-generator ./openapi.json")
   .example("openapi-ts-mock-generator http://127.0.0.1/openapi.json")

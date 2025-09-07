@@ -20,20 +20,21 @@ export const transformCliOptions = (rawOptions: any): Options => {
     baseDir: rawOptions.baseDir || defaultOptions.baseDir,
     arrayMinLength: parseInt(rawOptions.arrayMinLength) || defaultOptions.arrayMinLength,
     arrayMaxLength: parseInt(rawOptions.arrayMaxLength) || defaultOptions.arrayMaxLength,
-    isStatic: rawOptions.static || defaultOptions.isStatic,
     handlerUrl: rawOptions.handlerUrl || defaultOptions.handlerUrl,
     fakerLocale: rawOptions.locales || defaultOptions.fakerLocale,
     generateTarget: rawOptions.generateTarget || defaultOptions.generateTarget,
     specialPath: rawOptions.specialPath || defaultOptions.specialPath,
     clear: rawOptions.clear || defaultOptions.clear,
-    isOptional: rawOptions.isOptional || defaultOptions.isOptional,
-    isSingleLine: rawOptions.isSingleLine || defaultOptions.isSingleLine,
     includeCodes: rawOptions.includeCodes
       ? rawOptions.includeCodes
           .toString()
           .split(",")
           .map((code: string) => parseInt(code))
       : undefined,
+    // TypeScriptCodeOptions
+    isStatic: rawOptions.static || defaultOptions.isStatic,
+    isOptional: rawOptions.optional || defaultOptions.isOptional,
+    isSingleLine: rawOptions.singleLine || defaultOptions.isSingleLine,
   }
 }
 
