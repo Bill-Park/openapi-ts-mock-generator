@@ -3,7 +3,7 @@
  */
 
 import { Options, SchemaOutputType, faker } from "../core"
-import { toUnquotedJSON, readJsonFile } from "../utils"
+import { toTypeScriptCode, readJsonFile } from "../utils"
 import { join } from "path"
 
 /**
@@ -23,17 +23,13 @@ export const specialFakerParser = (options: Options) => {
   const descriptionSpecialKey: Record<string, object> = readJsonFile(descPath, {})
 
   const titleSpecial = Object.entries(titleSpecialKey).reduce((acc, [key, value]) => {
-    const fakerValue = getFakerValue(value, {
-      isStatic: options.isStatic,
-    })
+    const fakerValue = getFakerValue(value, options)
     acc[key] = fakerValue
     return acc
   }, {} as Record<string, SchemaOutputType>)
 
   const descriptionSpecial = Object.entries(descriptionSpecialKey).reduce((acc, [key, value]) => {
-    const fakerValue = getFakerValue(value, {
-      isStatic: options.isStatic,
-    })
+    const fakerValue = getFakerValue(value, options)
     acc[key] = fakerValue
     return acc
   }, {} as Record<string, SchemaOutputType>)
@@ -44,7 +40,7 @@ export const specialFakerParser = (options: Options) => {
 /**
  * 특별한 Faker 값 정의에서 실제 값을 생성
  */
-const getFakerValue = (value: object, options: { isStatic: boolean }): SchemaOutputType => {
+const getFakerValue = (value: object, options: Options): SchemaOutputType => {
   if ("value" in value) {
     // value type, use directly
     return value.value as SchemaOutputType
@@ -55,10 +51,9 @@ const getFakerValue = (value: object, options: { isStatic: boolean }): SchemaOut
     if (options.isStatic === false) {
       const fakerOption =
         "options" in value
-          ? toUnquotedJSON(value.options, {
+          ? toTypeScriptCode(value.options, {
               depth: 0,
-              isStatic: options.isStatic,
-              singleLine: true,
+              ...options,
             })
           : ""
       return `faker.${value.module}.${value.type}(${fakerOption})`

@@ -3,8 +3,8 @@
  * 동적 모킹에 사용할 Faker 설정 파일을 생성
  */
 
-import { Options } from "../core"
-import { ensureDir, safeWriteFile } from "../utils"
+import { GEN_COMMENT, Options } from "../core"
+import { ensureDir, safeWriteFile, toTypeScriptCode } from "../utils"
 import * as path from "path"
 
 /**
@@ -43,14 +43,12 @@ const generateFakerFileContent = (options: Options): string => {
  * 스키마별 모킹 데이터를 담은 파일을 생성
  */
 export const generateSchemaFile = (schemas: Record<string, any>, options: Options): void => {
-  const { toUnquotedJSON } = require("../utils")
-  const { GEN_COMMENT } = require("../core")
-
   // key is schema name, value is generated schema value
   const generatedVars = Object.entries(schemas)
     .map(([varName, varValue]) => {
-      return `export const ${varName}Mock = ${toUnquotedJSON(varValue, {
-        isStatic: options.isStatic,
+      return `export const ${varName}Mock = ${toTypeScriptCode(varValue, {
+        depth: 0,
+        ...options,
       })}`
     })
     .join("\n\n")

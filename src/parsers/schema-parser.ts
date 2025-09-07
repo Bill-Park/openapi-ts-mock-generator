@@ -16,7 +16,7 @@ import {
   MIN_WORD_LENGTH,
   MAX_WORD_LENGTH,
 } from "../core"
-import { compressCode, toUnquotedJSON, uuidToB64, getRandomLengthArray } from "../utils"
+import { compressCode, uuidToB64, getRandomLengthArray, toTypeScriptCode } from "../utils"
 import SwaggerParser from "@apidevtools/swagger-parser"
 import { pascalCase } from "change-case-all"
 import { SchemaObject, isReference } from "oazapfts/generate"
@@ -51,7 +51,7 @@ export const parseSchema = (
       ? faker.helpers.arrayElement(schemaValue.enum)
       : `faker.helpers.arrayElement<${schemaValue.enum
           .map((item) => `"${item}"`)
-          .join(" | ")}>(${toUnquotedJSON(schemaValue.enum, {
+          .join(" | ")}>(${toTypeScriptCode(schemaValue.enum, {
           depth: 0,
           ...options,
         })})`
@@ -77,7 +77,7 @@ export const parseSchema = (
       : compressCode(`
           faker.helpers.arrayElement([
             ${anyOfValue.map((field) =>
-              toUnquotedJSON(parseSchema(field, specialSchema, options, {}), {
+              toTypeScriptCode(parseSchema(field, specialSchema, options, {}), {
                 depth: 0,
                 ...options,
               })
@@ -96,7 +96,7 @@ export const parseSchema = (
       : compressCode(`
           faker.helpers.arrayElement([
             ${oneOfValue.map((field) =>
-              toUnquotedJSON(parseSchema(field, specialSchema, options, {}), {
+              toTypeScriptCode(parseSchema(field, specialSchema, options, {}), {
                 depth: 0,
                 ...options,
               })

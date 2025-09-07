@@ -3,10 +3,8 @@
  * MSW에서 사용할 응답 모킹 함수들을 생성
  */
 
-import { Options, PathNormalizedType, SchemaOutputType } from "../core"
+import { Options, PathNormalizedType } from "../core"
 import {
-  getRandomLengthArray,
-  toUnquotedJSON,
   toTypeScriptCode,
   ensureDir,
   clearDirectory,
@@ -16,7 +14,6 @@ import {
 import { parseSchema, refSchemaParser, specialFakerParser } from "../parsers"
 import SwaggerParser from "@apidevtools/swagger-parser"
 import { pascalCase } from "change-case-all"
-import { isReference } from "oazapfts/generate"
 import * as path from "path"
 
 /**
