@@ -58,7 +58,7 @@ export const generateResponses = async (
 const generateSingleResponse = (
   path: PathNormalizedType,
   res: { statusCode: number; description: string; schema: any },
-  refs: SwaggerParser.$Refs,
+  refs: SwaggerParser["$refs"],
   specialFakers: ReturnType<typeof specialFakerParser>,
   options: Options
 ): string => {

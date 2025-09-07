@@ -129,9 +129,9 @@ export const parseSchema = (
 /**
  * 참조 스키마를 파싱하여 이름과 값을 반환
  */
-export const refSchemaParser = (ref: string, refs: SwaggerParser.$Refs) => {
+export const refSchemaParser = (ref: string, refs: SwaggerParser["$refs"]) => {
   const schemaName = pascalCase(ref.replace("#/components/schemas/", ""))
-  const schemaValue: OpenAPIV3_1.SchemaObject = refs.get(ref)
+  const schemaValue = refs.get(ref) as OpenAPIV3_1.SchemaObject
   return { name: schemaName, value: schemaValue }
 }
 
