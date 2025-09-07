@@ -128,7 +128,7 @@ const writeResponseFiles = async (
   codeBasePerTag: Record<string, string[]>,
   options: Options
 ): Promise<void> => {
-  const directory = path.join(options.baseDir ?? "", "response")
+  const directory = path.join(options.baseDir, "response")
   ensureDir(directory)
   if (options.clear) {
     clearDirectory(directory)

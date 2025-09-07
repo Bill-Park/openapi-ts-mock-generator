@@ -3,7 +3,7 @@
  * MSW에서 사용할 HTTP 핸들러들을 생성
  */
 
-import { Options, PathNormalizedType } from "../core"
+import { GEN_COMMENT, Options, PathNormalizedType } from "../core"
 import { ensureDir, clearDirectory, safeWriteFile } from "../utils"
 import { camelCase, pascalCase } from "change-case-all"
 import * as path from "path"
@@ -75,13 +75,14 @@ const generateSingleHandler = (path: PathNormalizedType, options: Options): stri
  * 핸들러 파일들을 실제로 디스크에 작성
  */
 const writeHandlerFiles = (handlersPerTag: Record<string, string[]>, options: Options): void => {
+  const directory = path.join(options.baseDir, "handlers")
+  ensureDir(directory)
+  if (options.clear) {
+    clearDirectory(directory)
+  }
+
   Object.entries(handlersPerTag).forEach(([tag, handlers]) => {
     const content = generateHandlerFileContent(tag, handlers, options)
-    const directory = path.join(options.baseDir ?? "", "handlers")
-    ensureDir(directory)
-    if (options.clear) {
-      clearDirectory(directory)
-    }
 
     const fileName = path.join(directory, `${tag}.ts`)
     safeWriteFile(fileName, content)
@@ -99,8 +100,6 @@ const writeHandlerFiles = (handlersPerTag: Record<string, string[]>, options: Op
  * 핸들러 파일의 내용 생성
  */
 const generateHandlerFileContent = (tag: string, handlers: string[], options: Options): string => {
-  const { GEN_COMMENT } = require("../core")
-
   const importMSW = `import { http, HttpResponse } from 'msw'`
   const responseNames = handlers
     .reduce((acc, handler) => {
@@ -135,8 +134,6 @@ const generateMockHandlersFile = (
   handlersPerTag: Record<string, string[]>,
   options: Options
 ): string => {
-  const { GEN_COMMENT } = require("../core")
-
   const handlersImport = Object.keys(handlersPerTag)
     .map((tag) => {
       const handlerName = `${camelCase(tag)}Handlers`
