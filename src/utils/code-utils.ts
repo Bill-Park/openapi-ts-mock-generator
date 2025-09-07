@@ -10,12 +10,12 @@ import { ParseSchemaType, TypeScriptCodeOptions, CodeFormatOptions } from "../co
  */
 export const toTypeScriptCode = (
   param: ParseSchemaType,
-  options: TypeScriptCodeOptions = {}
+  options: TypeScriptCodeOptions
 ): string => {
-  const { depth = 0, isStatic = false, singleLine = false, optional = false } = options
+  const { depth = 0, isStatic, isSingleLine, isOptional } = options
 
   const prefixSpace = " ".repeat(depth * 2) // 들여쓰기용
-  const lineBreak = singleLine ? "" : "\n"
+  const lineBreak = isSingleLine ? "" : "\n"
 
   if (param === null) {
     return "null"
@@ -23,13 +23,13 @@ export const toTypeScriptCode = (
 
   if (Array.isArray(param)) {
     const results = param.map((elem) => toTypeScriptCode(elem, { ...options, depth: depth + 1 }))
-    const firstElementSpace = singleLine ? "" : "  "
+    const firstElementSpace = isSingleLine ? "" : "  "
     return ["[", firstElementSpace + results.join(", "), "]"].join(lineBreak + prefixSpace)
   }
 
   if (typeof param === "object") {
-    const firstElementSpace = singleLine ? " " : "  "
-    const lastComma = singleLine ? ", " : ","
+    const firstElementSpace = isSingleLine ? " " : "  "
+    const lastComma = isSingleLine ? ", " : ","
 
     const results = Object.entries(param)
       .map(([key, value]) => {
@@ -67,8 +67,8 @@ const generateObjectProperty = (
   lineBreak: string,
   lastComma: string
 ): string => {
-  const { optional = false, depth = 0 } = options
-  const firstElementSpace = options.singleLine ? " " : "  "
+  const { isOptional, depth } = options
+  const firstElementSpace = options.isSingleLine ? " " : "  "
 
   // nullable 타입 확장 로직
   const hasNull = optional && typeof value === "string" && value.includes(",null")

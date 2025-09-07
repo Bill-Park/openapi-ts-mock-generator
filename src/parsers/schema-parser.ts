@@ -53,8 +53,7 @@ export const parseSchema = (
           .map((item) => `"${item}"`)
           .join(" | ")}>(${toUnquotedJSON(schemaValue.enum, {
           depth: 0,
-          isStatic: options.isStatic,
-          singleLine: true,
+          ...options,
         })})`
     if (options.isStatic && typeof enumValue === "string") return enumValue + " as const"
     return enumValue
@@ -80,8 +79,7 @@ export const parseSchema = (
             ${anyOfValue.map((field) =>
               toUnquotedJSON(parseSchema(field, specialSchema, options, {}), {
                 depth: 0,
-                isStatic: options.isStatic,
-                singleLine: true,
+                ...options,
               })
             )}
           ])
@@ -100,8 +98,7 @@ export const parseSchema = (
             ${oneOfValue.map((field) =>
               toUnquotedJSON(parseSchema(field, specialSchema, options, {}), {
                 depth: 0,
-                isStatic: options.isStatic,
-                singleLine: true,
+                ...options,
               })
             )}
           ])

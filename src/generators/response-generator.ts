@@ -73,8 +73,7 @@ const generateSingleResponse = (
     codeBaseArray.push(
       `  return ${toTypeScriptCode(outputSchema, {
         depth: 1,
-        isStatic: options.isStatic,
-        optional: options.optional,
+        ...options,
       })}`
     )
   } else if (res.schema?.type === "array") {
@@ -87,8 +86,7 @@ const generateSingleResponse = (
       codeBaseArray.push(
         `  return ${toTypeScriptCode(outputSchema, {
           depth: 1,
-          isStatic: options.isStatic,
-          optional: options.optional,
+          ...options,
         })}`
       )
     } else {
@@ -98,8 +96,7 @@ const generateSingleResponse = (
       codeBaseArray.push(
         `  return ${toTypeScriptCode(outputSchema, {
           depth: 1,
-          isStatic: options.isStatic,
-          optional: options.optional,
+          ...options,
         })}`
       )
     }
@@ -112,7 +109,7 @@ const generateSingleResponse = (
       codeBaseArray.push(
         `  return ${toUnquotedJSON(outputSchema, {
           depth: 1,
-          isStatic: options.isStatic,
+          ...options,
         })}`
       )
     } else {
