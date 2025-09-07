@@ -105,44 +105,6 @@ const generateObjectProperty = (
 }
 
 /**
- * 순수한 JSON 변환 (코드 생성 로직 없음)
- */
-export const toCleanJSON = (param: ParseSchemaType, options: CodeFormatOptions = {}): string => {
-  const { depth = 0, singleLine = false } = options
-
-  const prefixSpace = " ".repeat(depth * 2)
-  const lineBreak = singleLine ? "" : "\n"
-
-  if (param === null) {
-    return "null"
-  }
-
-  if (Array.isArray(param)) {
-    const results = param.map((elem) => toCleanJSON(elem, { ...options, depth: depth + 1 }))
-    const firstElementSpace = singleLine ? "" : "  "
-    return ["[", firstElementSpace + results.join(", "), "]"].join(lineBreak + prefixSpace)
-  }
-
-  if (typeof param === "object") {
-    const firstElementSpace = singleLine ? " " : "  "
-    const lastComma = singleLine ? ", " : ","
-
-    const results = Object.entries(param)
-      .map(([key, value]) => {
-        return `${firstElementSpace}${key}: ${toCleanJSON(value, {
-          ...options,
-          depth: depth + 1,
-        })}${lastComma}`
-      })
-      .join(lineBreak + prefixSpace)
-
-    return ["{", `${results}`, "}"].join(lineBreak + prefixSpace)
-  }
-
-  return JSON.stringify(param)
-}
-
-/**
  * 멀티라인 코드를 한 줄로 압축
  */
 export const compressCode = (code: string): string => {
