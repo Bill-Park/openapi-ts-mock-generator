@@ -1,28 +1,37 @@
+/**
+ * OpenAPI 스키마 파싱 및 값 생성 로직
+ */
+
 import {
-  ARRAY_MAX_LENGTH,
-  ARRAY_MIN_LENGTH,
-  MAX_INTEGER,
-  MAX_NUMBER,
-  MAX_STRING_LENGTH,
-  MAX_WORD_LENGTH,
-  MIN_INTEGER,
-  MIN_NUMBER,
-  MIN_STRING_LENGTH,
-  MIN_WORD_LENGTH,
+  Options,
+  ParseSchemaType,
+  SchemaOutputType,
   faker,
-} from "./defaults"
-import { Options, ParseSchemaType, SchemaOutputType } from "./types"
-import { multiLineStr, toUnquotedJSON } from "./writer"
+  MIN_STRING_LENGTH,
+  MAX_STRING_LENGTH,
+  MIN_INTEGER,
+  MAX_INTEGER,
+  MIN_NUMBER,
+  MAX_NUMBER,
+  MIN_WORD_LENGTH,
+  MAX_WORD_LENGTH,
+  TypeScriptCodeOptions,
+} from "../core"
+import { compressCode, uuidToB64, getRandomLengthArray, toTypeScriptCode } from "../utils"
 import SwaggerParser from "@apidevtools/swagger-parser"
 import { pascalCase } from "change-case-all"
-import { existsSync, readFileSync } from "fs"
 import { SchemaObject, isReference } from "oazapfts/generate"
 import { OpenAPIV3_1 } from "openapi-types"
-import { join } from "path"
 
+/**
+ * OpenAPI 스키마를 파싱하여 실제 값을 생성
+ */
 export const parseSchema = (
   schemaValue: OpenAPIV3_1.ReferenceObject | OpenAPIV3_1.SchemaObject,
-  specialSchema: ReturnType<typeof specialFakerParser>,
+  specialSchema: {
+    titleSpecial: Record<string, SchemaOutputType>
+    descriptionSpecial: Record<string, SchemaOutputType>
+  },
   options: Options,
   outputSchema: ParseSchemaType = {}
 ): ParseSchemaType => {
@@ -43,10 +52,9 @@ export const parseSchema = (
       ? faker.helpers.arrayElement(schemaValue.enum)
       : `faker.helpers.arrayElement<${schemaValue.enum
           .map((item) => `"${item}"`)
-          .join(" | ")}>(${toUnquotedJSON(schemaValue.enum, {
+          .join(" | ")}>(${toTypeScriptCode(schemaValue.enum, {
           depth: 0,
-          isStatic: options.isStatic,
-          singleLine: true,
+          ...options,
         })})`
     if (options.isStatic && typeof enumValue === "string") return enumValue + " as const"
     return enumValue
@@ -67,17 +75,18 @@ export const parseSchema = (
             return parseSchema(field, specialSchema, options, outputSchema)
           })
         )
-      : multiLineStr(`
+      : compressCode(
+          `
           faker.helpers.arrayElement([
             ${anyOfValue.map((field) =>
-              toUnquotedJSON(parseSchema(field, specialSchema, options, {}), {
+              toTypeScriptCode(parseSchema(field, specialSchema, options, {}), {
                 depth: 0,
-                isStatic: options.isStatic,
-                singleLine: true,
+                ...options,
               })
             )}
           ])
-        `)
+        `
+        )
   } else if (schemaValue.oneOf !== undefined) {
     // oneOf value, exactly one. Can't find example
     const oneOfValue = schemaValue.oneOf
@@ -87,17 +96,18 @@ export const parseSchema = (
             return parseSchema(field, specialSchema, options, outputSchema)
           })
         )
-      : multiLineStr(`
+      : compressCode(
+          `
           faker.helpers.arrayElement([
             ${oneOfValue.map((field) =>
-              toUnquotedJSON(parseSchema(field, specialSchema, options, {}), {
+              toTypeScriptCode(parseSchema(field, specialSchema, options, {}), {
                 depth: 0,
-                isStatic: options.isStatic,
-                singleLine: true,
+                ...options,
               })
             )}
           ])
-        `)
+        `
+        )
   } else if (schemaValue.type === "array") {
     if ("prefixItems" in schemaValue) {
       const length = faker.number.int({
@@ -118,24 +128,30 @@ export const parseSchema = (
       parseSchema(arrayValue, specialSchema, options, outputSchema)
     ) as (SchemaOutputType | Record<string, SchemaOutputType>)[]
   }
-  return valueGenerator(schemaValue, specialSchema, options.isStatic)
+  return valueGenerator(schemaValue, specialSchema, options)
 }
 
-const uuidToB64 = (uuid: string) => {
-  const uuidBuffer = Buffer.from(uuid.replace(/-/g, ""), "hex")
-  const base64Uuid = uuidBuffer
-    .toString("base64")
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=/g, "")
-  return base64Uuid
+/**
+ * 참조 스키마를 파싱하여 이름과 값을 반환
+ */
+export const refSchemaParser = (ref: string, refs: SwaggerParser["$refs"]) => {
+  const schemaName = pascalCase(ref.replace("#/components/schemas/", ""))
+  const schemaValue = refs.get(ref) as OpenAPIV3_1.SchemaObject
+  return { name: schemaName, value: schemaValue }
 }
 
-const valueGenerator = (
+/**
+ * 스키마 타입별로 실제 값을 생성하는 함수
+ */
+export const valueGenerator = (
   schemaValue: OpenAPIV3_1.SchemaObject,
-  specialSchema: ReturnType<typeof specialFakerParser>,
-  isStatic: boolean
+  specialSchema: {
+    titleSpecial: Record<string, SchemaOutputType>
+    descriptionSpecial: Record<string, SchemaOutputType>
+  },
+  options: TypeScriptCodeOptions
 ): ParseSchemaType => {
+  const { isStatic } = options
   // if title or description in special keys
   // return special faker data
   const { titleSpecial, descriptionSpecial } = specialSchema
@@ -154,13 +170,15 @@ const valueGenerator = (
             to: "2030-12-31T23:59:59.999Z",
           })
           .toISOString()
-      : multiLineStr(`
+      : compressCode(
+          `
           faker.date.between({
             from: "2020-01-01T00:00:00.000Z",
             to: "2030-12-31T23:59:59.999Z",
           })
           .toISOString()
-        `)
+        `
+        )
   } else if (schemaValue.type === "string" && schemaValue.format === "date") {
     // date, 2017-07-21
     return isStatic
@@ -171,14 +189,16 @@ const valueGenerator = (
           })
           .toISOString()
           .split("T")[0]
-      : multiLineStr(`
+      : compressCode(
+          `
           faker.date.between({
             from: "2020-01-01T00:00:00.000Z",
             to: "2030-12-31T23:59:59.999Z",
           })
           .toISOString()
           .split("T")[0]
-        `)
+        `
+        )
   } else if (schemaValue.type === "string" && schemaValue.pattern) {
     return isStatic
       ? faker.helpers.fromRegExp(schemaValue.pattern)
@@ -188,13 +208,15 @@ const valueGenerator = (
     const baseUuid = faker.string.uuid()
     return isStatic
       ? uuidToB64(baseUuid)
-      : multiLineStr(`
+      : compressCode(
+          `
           Buffer.from(faker.string.uuid().replace(/-/g, ""), "hex")
           .toString("base64")
           .replace(/\\+/g, "-")
           .replace(/\\//g, "_")
           .replace(/=/g, "")
-        `)
+        `
+        )
   } else if (schemaValue.type === "string") {
     const minLength =
       schemaValue.minLength ??
@@ -207,17 +229,21 @@ const valueGenerator = (
       ? faker.string.alphanumeric({
           length: { min: minLength, max: maxLength },
         })
-      : multiLineStr(`
+      : compressCode(
+          `
           faker.string.alphanumeric({
             length: { min: ${minLength}, max: ${maxLength} },
           })
-        `)
+        `
+        )
   } else if (schemaValue.type === "integer") {
     return isStatic
       ? faker.number.int({ min: MIN_INTEGER, max: MAX_INTEGER })
-      : multiLineStr(`
+      : compressCode(
+          `
           faker.number.int({ min: ${MIN_INTEGER}, max: ${MAX_INTEGER} })
-        `)
+        `
+        )
   } else if (schemaValue.type === "number") {
     const minNumber = schemaValue.minimum ?? Math.min(MIN_NUMBER, schemaValue.maximum ?? MAX_NUMBER)
     const maxNumber = schemaValue.maximum ?? Math.max(MAX_NUMBER, schemaValue.minimum ?? MIN_NUMBER)
@@ -227,13 +253,15 @@ const valueGenerator = (
           max: maxNumber,
           fractionDigits: 2,
         })
-      : multiLineStr(`
+      : compressCode(
+          `
           faker.number.float({
             min: ${minNumber},
             max: ${maxNumber},
             fractionDigits: 2,
           })
-        `)
+        `
+        )
   } else if (schemaValue.type === "boolean") {
     return isStatic ? faker.datatype.boolean() : "faker.datatype.boolean()"
   } else if (schemaValue.type === "null") {
@@ -247,100 +275,17 @@ const valueGenerator = (
             max: MAX_WORD_LENGTH,
           },
         })
-      : multiLineStr(`
+      : compressCode(
+          `
           faker.word.words({
             count: {
               min: ${MIN_WORD_LENGTH},
               max: ${MAX_WORD_LENGTH},
             },
           })
-        `)
+        `
+        )
   }
 
   return isStatic ? faker.word.adjective() : "faker.word.adjective()"
-}
-
-export const getRandomLengthArray = (
-  min: number = ARRAY_MIN_LENGTH,
-  max: number = ARRAY_MAX_LENGTH
-) => {
-  const length = faker.number.int({
-    min,
-    max,
-  })
-  return Array.from({ length }, (_, i) => i)
-}
-
-export const refSchemaParser = (ref: string, refs: SwaggerParser.$Refs) => {
-  const schemaName = pascalCase(ref.replace("#/components/schemas/", ""))
-  const schemaValue: OpenAPIV3_1.SchemaObject = refs.get(ref)
-  return { name: schemaName, value: schemaValue }
-}
-
-const getFakerValue = (value: object, options: { isStatic: boolean }): SchemaOutputType => {
-  if ("value" in value) {
-    // value type, use directly
-    return value.value as SchemaOutputType
-  }
-  if ("module" in value && "type" in value) {
-    // dynamic faker
-    if (options.isStatic === false) {
-      const fakerOption =
-        "options" in value
-          ? toUnquotedJSON(value.options, {
-              depth: 0,
-              isStatic: options.isStatic,
-              singleLine: true,
-            })
-          : ""
-      return `faker.${value.module}.${value.type}(${fakerOption})`
-    }
-    // faker type, make faker
-    const fakerModule = faker[value.module as keyof typeof faker]
-    if (fakerModule === undefined) {
-      console.warn("can't find faker module", fakerModule)
-      return undefined
-    }
-    const fakerFunc = fakerModule[value.type as keyof typeof fakerModule] as Function
-    if (fakerFunc === undefined || typeof fakerFunc !== "function") {
-      console.warn("can't find faker function", fakerFunc)
-      return undefined
-    }
-    return "options" in value ? fakerFunc(value.options) : fakerFunc()
-  }
-  return undefined
-}
-
-export const specialFakerParser = (options: Options) => {
-  if (options.specialPath === undefined)
-    return {
-      titleSpecial: {},
-      descriptionSpecial: {},
-    }
-  const titlePath = join(options.baseDir ?? "", options.specialPath, "titles.json")
-  const descPath = join(options.baseDir ?? "", options.specialPath, "descriptions.json")
-  const titleSpecialKey: Record<string, object> = existsSync(titlePath)
-    ? JSON.parse(readFileSync(titlePath, "utf-8"))
-    : {}
-  const descriptionSpecialKey: Record<string, object> = existsSync(descPath)
-    ? JSON.parse(readFileSync(descPath, "utf-8"))
-    : {}
-
-  const titleSpecial = Object.entries(titleSpecialKey).reduce((acc, [key, value]) => {
-    const fakerValue = getFakerValue(value, {
-      isStatic: options.isStatic,
-    })
-    acc[key] = fakerValue
-    return acc
-  }, {} as Record<string, SchemaOutputType>)
-
-  const descriptionSpecial = Object.entries(descriptionSpecialKey).reduce((acc, [key, value]) => {
-    const fakerValue = getFakerValue(value, {
-      isStatic: options.isStatic,
-    })
-    acc[key] = fakerValue
-    return acc
-  }, {} as Record<string, SchemaOutputType>)
-
-  return { titleSpecial, descriptionSpecial }
 }

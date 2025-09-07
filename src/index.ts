@@ -1,6 +1,11 @@
-import { generateAPI, generateSchema } from "./generate"
-import { Options } from "./types"
-import { writeFaker, writeHandlers, writeResponses, writeSchema } from "./writer"
+import { generateAPI, generateSchema } from "./generators"
+import { Options } from "./core"
+import {
+  generateResponses,
+  generateHandlers,
+  generateSchemaFile,
+  generateFaker,
+} from "./generators"
 import { existsSync, mkdirSync } from "fs"
 
 export const main = async (options: Options) => {
@@ -14,8 +19,8 @@ export const main = async (options: Options) => {
       console.warn("generate api fail")
       return
     }
-    writeHandlers(generatedAPI, options)
-    writeResponses(generatedAPI, options)
+    generateHandlers(generatedAPI, options)
+    await generateResponses(generatedAPI, options)
   }
 
   if (options.generateTarget.includes("schema")) {
@@ -24,8 +29,8 @@ export const main = async (options: Options) => {
       console.warn("generate schema fail")
       return
     }
-    writeSchema(generatedSchema, options)
+    generateSchemaFile(generatedSchema, options)
   }
 
-  if (options.isStatic === false) writeFaker(options)
+  if (options.isStatic === false) generateFaker(options)
 }
