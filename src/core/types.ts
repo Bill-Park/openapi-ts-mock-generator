@@ -15,7 +15,7 @@ export type Options = {
   fakerLocale: string
   generateTarget: string
   clear: boolean
-} & Omit<TypeScriptCodeOptions, "depth">
+} & TypeScriptCodeOptions
 
 /**
  * 스키마 출력 기본 타입
@@ -95,7 +95,7 @@ export type CodeFormatOptions = {
  * TypeScript 코드 생성 옵션
  */
 export type TypeScriptCodeOptions = {
-  depth: number
+  depth?: number
   isStatic: boolean
   isSingleLine: boolean
   isOptional: boolean

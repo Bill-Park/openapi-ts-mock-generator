@@ -12,7 +12,7 @@ export const toTypeScriptCode = (
   param: ParseSchemaType,
   options: TypeScriptCodeOptions
 ): string => {
-  const { depth, isStatic, isSingleLine } = options
+  const { depth = 0, isStatic, isSingleLine } = options
 
   const prefixSpace = " ".repeat(depth * 2) // 들여쓰기용
   const lineBreak = isSingleLine ? "" : "\n"
@@ -22,13 +22,13 @@ export const toTypeScriptCode = (
   }
 
   if (Array.isArray(param)) {
-    const results = param.map((elem) => toTypeScriptCode(elem, { ...options, depth: depth + 1 }))
-    const firstElementSpace = isSingleLine ? "" : "  "
-    return ["[", firstElementSpace + results.join(", "), "]"].join(lineBreak + prefixSpace)
+    const results = param
+      .map((elem) => toTypeScriptCode(elem, { ...options, depth: depth + 1 }))
+      .join("," + lineBreak + prefixSpace)
+    return ["[", results, "]"].join(lineBreak + prefixSpace)
   }
 
   if (typeof param === "object") {
-    const firstElementSpace = isSingleLine ? " " : "  "
     const lastComma = isSingleLine ? ", " : ","
 
     const results = Object.entries(param)
@@ -87,20 +87,21 @@ const generateObjectProperty = (
   lineBreak: string,
   lastComma: string
 ): string => {
-  const { isOptional, depth } = options
-  const firstElementSpace = options.isSingleLine ? " " : "  "
+  const { isOptional, depth = 0 } = options
 
   // nullable 타입 확장 로직
   const shouldApplyNullable = shouldApplyNullableExtension(value, isOptional)
-  const nullableTypeExtensionStart = shouldApplyNullable ? "...(faker.datatype.boolean() ? {" : ""
-  const nullableTypeExtensionEnd = shouldApplyNullable ? "} : {})" : ""
+  const nullableTypeExtensionStart = shouldApplyNullable
+    ? `...(faker.datatype.boolean() ? {${lineBreak}${prefixSpace}`
+    : ""
+  const nullableTypeExtensionEnd = shouldApplyNullable ? `${lineBreak}${prefixSpace}} : {})` : ""
 
   const propertyValue = toTypeScriptCode(value, {
     ...options,
     depth: depth + 1,
   })
 
-  return `${firstElementSpace}${nullableTypeExtensionStart}${key}: ${propertyValue}${nullableTypeExtensionEnd}${lastComma}`
+  return `${nullableTypeExtensionStart}${prefixSpace}${key}: ${propertyValue}${nullableTypeExtensionEnd}${lastComma}`
 }
 
 /**

@@ -15,6 +15,7 @@ import {
   MAX_NUMBER,
   MIN_WORD_LENGTH,
   MAX_WORD_LENGTH,
+  TypeScriptCodeOptions,
 } from "../core"
 import { compressCode, uuidToB64, getRandomLengthArray, toTypeScriptCode } from "../utils"
 import SwaggerParser from "@apidevtools/swagger-parser"
@@ -123,7 +124,7 @@ export const parseSchema = (
       parseSchema(arrayValue, specialSchema, options, outputSchema)
     ) as (SchemaOutputType | Record<string, SchemaOutputType>)[]
   }
-  return valueGenerator(schemaValue, specialSchema, options.isStatic)
+  return valueGenerator(schemaValue, specialSchema, options)
 }
 
 /**
@@ -144,8 +145,9 @@ export const valueGenerator = (
     titleSpecial: Record<string, SchemaOutputType>
     descriptionSpecial: Record<string, SchemaOutputType>
   },
-  isStatic: boolean
+  options: TypeScriptCodeOptions
 ): ParseSchemaType => {
+  const { isStatic } = options
   // if title or description in special keys
   // return special faker data
   const { titleSpecial, descriptionSpecial } = specialSchema
