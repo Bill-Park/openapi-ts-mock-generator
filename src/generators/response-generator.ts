@@ -10,11 +10,13 @@ import {
   clearDirectory,
   resolveFilePath,
   safeWriteFile,
+  getRandomLengthArray,
 } from "../utils"
 import { parseSchema, refSchemaParser, specialFakerParser } from "../parsers"
 import SwaggerParser from "@apidevtools/swagger-parser"
 import { pascalCase } from "change-case-all"
 import * as path from "path"
+import { isReference } from "oazapfts/generate"
 
 /**
  * 응답 모킹 함수들을 생성하고 파일로 출력
@@ -104,7 +106,7 @@ const generateSingleResponse = (
       const outputSchema = parseSchema(value, specialFakers, options)
       codeBaseArray.push(`  // Schema is ${name}`)
       codeBaseArray.push(
-        `  return ${toUnquotedJSON(outputSchema, {
+        `  return ${toTypeScriptCode(outputSchema, {
           depth: 1,
           ...options,
         })}`
