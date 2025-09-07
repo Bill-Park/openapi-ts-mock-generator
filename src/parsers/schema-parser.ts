@@ -75,7 +75,8 @@ export const parseSchema = (
             return parseSchema(field, specialSchema, options, outputSchema)
           })
         )
-      : compressCode(`
+      : compressCode(
+          `
           faker.helpers.arrayElement([
             ${anyOfValue.map((field) =>
               toTypeScriptCode(parseSchema(field, specialSchema, options, {}), {
@@ -84,7 +85,8 @@ export const parseSchema = (
               })
             )}
           ])
-        `)
+        `
+        )
   } else if (schemaValue.oneOf !== undefined) {
     // oneOf value, exactly one. Can't find example
     const oneOfValue = schemaValue.oneOf
@@ -94,7 +96,8 @@ export const parseSchema = (
             return parseSchema(field, specialSchema, options, outputSchema)
           })
         )
-      : compressCode(`
+      : compressCode(
+          `
           faker.helpers.arrayElement([
             ${oneOfValue.map((field) =>
               toTypeScriptCode(parseSchema(field, specialSchema, options, {}), {
@@ -103,7 +106,8 @@ export const parseSchema = (
               })
             )}
           ])
-        `)
+        `
+        )
   } else if (schemaValue.type === "array") {
     if ("prefixItems" in schemaValue) {
       const length = faker.number.int({
@@ -166,13 +170,15 @@ export const valueGenerator = (
             to: "2030-12-31T23:59:59.999Z",
           })
           .toISOString()
-      : compressCode(`
+      : compressCode(
+          `
           faker.date.between({
             from: "2020-01-01T00:00:00.000Z",
             to: "2030-12-31T23:59:59.999Z",
           })
           .toISOString()
-        `)
+        `
+        )
   } else if (schemaValue.type === "string" && schemaValue.format === "date") {
     // date, 2017-07-21
     return isStatic
@@ -183,14 +189,16 @@ export const valueGenerator = (
           })
           .toISOString()
           .split("T")[0]
-      : compressCode(`
+      : compressCode(
+          `
           faker.date.between({
             from: "2020-01-01T00:00:00.000Z",
             to: "2030-12-31T23:59:59.999Z",
           })
           .toISOString()
           .split("T")[0]
-        `)
+        `
+        )
   } else if (schemaValue.type === "string" && schemaValue.pattern) {
     return isStatic
       ? faker.helpers.fromRegExp(schemaValue.pattern)
@@ -200,13 +208,15 @@ export const valueGenerator = (
     const baseUuid = faker.string.uuid()
     return isStatic
       ? uuidToB64(baseUuid)
-      : compressCode(`
+      : compressCode(
+          `
           Buffer.from(faker.string.uuid().replace(/-/g, ""), "hex")
           .toString("base64")
           .replace(/\\+/g, "-")
           .replace(/\\//g, "_")
           .replace(/=/g, "")
-        `)
+        `
+        )
   } else if (schemaValue.type === "string") {
     const minLength =
       schemaValue.minLength ??
@@ -219,17 +229,21 @@ export const valueGenerator = (
       ? faker.string.alphanumeric({
           length: { min: minLength, max: maxLength },
         })
-      : compressCode(`
+      : compressCode(
+          `
           faker.string.alphanumeric({
             length: { min: ${minLength}, max: ${maxLength} },
           })
-        `)
+        `
+        )
   } else if (schemaValue.type === "integer") {
     return isStatic
       ? faker.number.int({ min: MIN_INTEGER, max: MAX_INTEGER })
-      : compressCode(`
+      : compressCode(
+          `
           faker.number.int({ min: ${MIN_INTEGER}, max: ${MAX_INTEGER} })
-        `)
+        `
+        )
   } else if (schemaValue.type === "number") {
     const minNumber = schemaValue.minimum ?? Math.min(MIN_NUMBER, schemaValue.maximum ?? MAX_NUMBER)
     const maxNumber = schemaValue.maximum ?? Math.max(MAX_NUMBER, schemaValue.minimum ?? MIN_NUMBER)
@@ -239,13 +253,15 @@ export const valueGenerator = (
           max: maxNumber,
           fractionDigits: 2,
         })
-      : compressCode(`
+      : compressCode(
+          `
           faker.number.float({
             min: ${minNumber},
             max: ${maxNumber},
             fractionDigits: 2,
           })
-        `)
+        `
+        )
   } else if (schemaValue.type === "boolean") {
     return isStatic ? faker.datatype.boolean() : "faker.datatype.boolean()"
   } else if (schemaValue.type === "null") {
@@ -259,14 +275,16 @@ export const valueGenerator = (
             max: MAX_WORD_LENGTH,
           },
         })
-      : compressCode(`
+      : compressCode(
+          `
           faker.word.words({
             count: {
               min: ${MIN_WORD_LENGTH},
               max: ${MAX_WORD_LENGTH},
             },
           })
-        `)
+        `
+        )
   }
 
   return isStatic ? faker.word.adjective() : "faker.word.adjective()"

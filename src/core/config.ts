@@ -18,7 +18,6 @@ export const defaultOptions: Options = {
   // TypeScriptCodeOptions
   isStatic: false,
   isOptional: false,
-  isSingleLine: true,
 }
 
 /**

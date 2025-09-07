@@ -43,9 +43,6 @@ cli
   .option("--optional", "Generate optional mocks.", {
     default: defaultOptions.isOptional,
   })
-  .option("--single-line", "Generate single line mocks.", {
-    default: defaultOptions.isSingleLine,
-  })
   .example("openapi-ts-mock-generator ./openapi.json")
   .example("openapi-ts-mock-generator http://127.0.0.1/openapi.json")
   .action(async (path, userOptions) => {

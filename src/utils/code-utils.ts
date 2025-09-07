@@ -12,10 +12,9 @@ export const toTypeScriptCode = (
   param: ParseSchemaType,
   options: TypeScriptCodeOptions
 ): string => {
-  const { depth = 0, isStatic, isSingleLine } = options
+  const { depth = 0, isStatic } = options
 
   const prefixSpace = " ".repeat(depth * 2) // 들여쓰기용
-  const lineBreak = isSingleLine ? "" : "\n"
 
   if (param === null) {
     return "null"
@@ -24,20 +23,18 @@ export const toTypeScriptCode = (
   if (Array.isArray(param)) {
     const results = param
       .map((elem) => toTypeScriptCode(elem, { ...options, depth: depth + 1 }))
-      .join("," + lineBreak + prefixSpace)
-    return ["[", results, "]"].join(lineBreak + prefixSpace)
+      .join(",\n" + prefixSpace)
+    return ["[", results, "]"].join("\n" + prefixSpace)
   }
 
   if (typeof param === "object") {
-    const lastComma = isSingleLine ? ", " : ","
-
     const results = Object.entries(param)
       .map(([key, value]) => {
-        return generateObjectProperty(key, value, options, prefixSpace, lineBreak, lastComma)
+        return generateObjectProperty(key, value, options, prefixSpace)
       })
-      .join(lineBreak + prefixSpace)
+      .join("\n" + prefixSpace)
 
-    return ["{", `${results}`, "}"].join(lineBreak + prefixSpace)
+    return ["{", `${results}`, "}"].join("\n" + prefixSpace)
   }
 
   // 문자열 처리
@@ -83,25 +80,23 @@ const generateObjectProperty = (
   key: string,
   value: any,
   options: TypeScriptCodeOptions,
-  prefixSpace: string,
-  lineBreak: string,
-  lastComma: string
+  prefixSpace: string
 ): string => {
   const { isOptional, depth = 0 } = options
 
   // nullable 타입 확장 로직
   const shouldApplyNullable = shouldApplyNullableExtension(value, isOptional)
   const nullableTypeExtensionStart = shouldApplyNullable
-    ? `...(faker.datatype.boolean() ? {${lineBreak}${prefixSpace}`
+    ? `...(faker.datatype.boolean() ? {\n${prefixSpace}`
     : ""
-  const nullableTypeExtensionEnd = shouldApplyNullable ? `${lineBreak}${prefixSpace}} : {})` : ""
+  const nullableTypeExtensionEnd = shouldApplyNullable ? `\n${prefixSpace}} : {})` : ""
 
   const propertyValue = toTypeScriptCode(value, {
     ...options,
     depth: depth + 1,
   })
 
-  return `${nullableTypeExtensionStart}${prefixSpace}${key}: ${propertyValue}${nullableTypeExtensionEnd}${lastComma}`
+  return `${nullableTypeExtensionStart}${prefixSpace}${key}: ${propertyValue}${nullableTypeExtensionEnd},`
 }
 
 /**

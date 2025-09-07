@@ -34,7 +34,6 @@ export const transformCliOptions = (rawOptions: any): Options => {
     // TypeScriptCodeOptions
     isStatic: rawOptions.static || defaultOptions.isStatic,
     isOptional: rawOptions.optional || defaultOptions.isOptional,
-    isSingleLine: rawOptions.singleLine || defaultOptions.isSingleLine,
   }
 }
 

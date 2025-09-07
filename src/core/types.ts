@@ -97,7 +97,6 @@ export type CodeFormatOptions = {
 export type TypeScriptCodeOptions = {
   depth?: number
   isStatic: boolean
-  isSingleLine: boolean
   isOptional: boolean
 }
 
