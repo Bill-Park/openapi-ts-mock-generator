@@ -6,13 +6,19 @@ import { Options } from "./types"
  */
 export const defaultOptions: Options = {
   path: "",
-  baseDir: "./",
   arrayMinLength: 1,
   arrayMaxLength: 3,
-  isStatic: false,
+  includeCodes: undefined,
+  baseDir: "./",
+  specialPath: undefined,
   handlerUrl: "*",
   fakerLocale: "ko",
   generateTarget: "api,schema",
+  clear: false,
+  // TypeScriptCodeOptions
+  isStatic: false,
+  isOptional: false,
+  isSingleLine: true,
 }
 
 /**

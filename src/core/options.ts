@@ -16,17 +16,18 @@ export const mergeOptions = (userOptions: Partial<Options>): Options => {
  */
 export const transformCliOptions = (rawOptions: any): Options => {
   return {
-    path: rawOptions.path || "",
-    baseDir: rawOptions.baseDir,
+    path: rawOptions.path || defaultOptions.path,
+    baseDir: rawOptions.baseDir || defaultOptions.baseDir,
     arrayMinLength: parseInt(rawOptions.arrayMinLength) || defaultOptions.arrayMinLength,
     arrayMaxLength: parseInt(rawOptions.arrayMaxLength) || defaultOptions.arrayMaxLength,
     isStatic: rawOptions.static || defaultOptions.isStatic,
     handlerUrl: rawOptions.handlerUrl || defaultOptions.handlerUrl,
     fakerLocale: rawOptions.locales || defaultOptions.fakerLocale,
     generateTarget: rawOptions.generateTarget || defaultOptions.generateTarget,
-    specialPath: rawOptions.specialPath,
-    clear: rawOptions.clear || false,
-    optional: rawOptions.optional || false,
+    specialPath: rawOptions.specialPath || defaultOptions.specialPath,
+    clear: rawOptions.clear || defaultOptions.clear,
+    isOptional: rawOptions.isOptional || defaultOptions.isOptional,
+    isSingleLine: rawOptions.isSingleLine || defaultOptions.isSingleLine,
     includeCodes: rawOptions.includeCodes
       ? rawOptions.includeCodes
           .toString()

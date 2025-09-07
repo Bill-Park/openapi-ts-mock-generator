@@ -6,18 +6,16 @@ import { OpenAPIV3_1 } from "openapi-types"
  */
 export type Options = {
   path: string
-  arrayMinLength?: number
-  arrayMaxLength?: number
-  isStatic: boolean
-  includeCodes?: number[]
-  baseDir?: string
-  specialPath?: string
+  arrayMinLength: number
+  arrayMaxLength: number
+  includeCodes: number[] | undefined
+  baseDir: string
+  specialPath: string | undefined
   handlerUrl: string
   fakerLocale: string
   generateTarget: string
-  clear?: boolean
-  optional?: boolean
-}
+  clear: boolean
+} & Omit<TypeScriptCodeOptions, "depth">
 
 /**
  * 스키마 출력 기본 타입
@@ -94,10 +92,13 @@ export type CodeFormatOptions = {
 }
 
 /**
- * TypeScript 코드 생성 옵션 (nullable 타입 확장 포함)
+ * TypeScript 코드 생성 옵션
  */
-export type TypeScriptCodeOptions = CodeFormatOptions & {
-  optional?: boolean
+export type TypeScriptCodeOptions = {
+  depth: number
+  isStatic: boolean
+  isSingleLine: boolean
+  isOptional: boolean
 }
 
 /**
